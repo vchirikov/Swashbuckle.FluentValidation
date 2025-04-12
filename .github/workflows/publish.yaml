@@ -100,4 +100,5 @@ jobs:
         run: |-
           dotnet restore --runtime linux-x64 -p:Configuration=Release -t:GenerateAssemblyNBGVVersionInfo
           dotnet test
+          dotnet pack -c Release
           dotnet nuget push artifacts/nupkg/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json --force-english-output --timeout 20 --skip-duplicate
