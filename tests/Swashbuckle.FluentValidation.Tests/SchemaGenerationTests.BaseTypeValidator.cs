@@ -1,9 +1,4 @@
-﻿using FluentAssertions;
-using FluentValidation;
-using MicroElements.OpenApi.FluentValidation;
-using Xunit;
-
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+﻿namespace MicroElements.Swashbuckle.FluentValidation.Tests;
 
 public partial class SchemaGenerationTests
 {

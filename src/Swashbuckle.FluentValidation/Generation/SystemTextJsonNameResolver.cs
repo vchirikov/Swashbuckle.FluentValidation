@@ -4,41 +4,40 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MicroElements.OpenApi.FluentValidation;
+using OpenApi.FluentValidation;
 using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
 
-namespace MicroElements.Swashbuckle.FluentValidation.Generation
+namespace MicroElements.Swashbuckle.FluentValidation.Generation;
+
+/// <summary>
+/// Resolves name according System.Text.Json <see cref="JsonPropertyNameAttribute"/> or <see cref="JsonSerializerOptions.PropertyNamingPolicy"/>.
+/// </summary>
+public class SystemTextJsonNameResolver : INameResolver
 {
+    private readonly JsonSerializerOptions? _serializerOptions;
+
     /// <summary>
-    /// Resolves name according System.Text.Json <see cref="JsonPropertyNameAttribute"/> or <see cref="JsonSerializerOptions.PropertyNamingPolicy"/>.
+    /// Initializes a new instance of the <see cref="SystemTextJsonNameResolver"/> class.
     /// </summary>
-    public class SystemTextJsonNameResolver : INameResolver
+    /// <param name="serializerOptions"><see cref="JsonSerializerOptions"/>.</param>
+    public SystemTextJsonNameResolver(AspNetJsonSerializerOptions? serializerOptions = null)
     {
-        private readonly JsonSerializerOptions? _serializerOptions;
+        _serializerOptions = serializerOptions?.Value ?? new JsonSerializerOptions();
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SystemTextJsonNameResolver"/> class.
-        /// </summary>
-        /// <param name="serializerOptions"><see cref="JsonSerializerOptions"/>.</param>
-        public SystemTextJsonNameResolver(AspNetJsonSerializerOptions? serializerOptions = null)
+    /// <inheritdoc />
+    public string GetPropertyName(PropertyInfo propertyInfo)
+    {
+        if (propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>() is { Name: { } jsonPropertyName })
         {
-            _serializerOptions = serializerOptions?.Value ?? new JsonSerializerOptions();
+            return jsonPropertyName;
         }
 
-        /// <inheritdoc />
-        public string GetPropertyName(PropertyInfo propertyInfo)
+        if (_serializerOptions?.PropertyNamingPolicy is { } jsonNamingPolicy)
         {
-            if (propertyInfo.GetCustomAttribute<JsonPropertyNameAttribute>() is { Name: { } jsonPropertyName })
-            {
-                return jsonPropertyName;
-            }
-
-            if (_serializerOptions?.PropertyNamingPolicy is { } jsonNamingPolicy)
-            {
-                return jsonNamingPolicy.ConvertName(propertyInfo.Name);
-            }
-
-            return propertyInfo.Name;
+            return jsonNamingPolicy.ConvertName(propertyInfo.Name);
         }
+
+        return propertyInfo.Name;
     }
 }

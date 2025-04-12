@@ -3,19 +3,18 @@
 
 using System.Reflection;
 
-namespace MicroElements.OpenApi.FluentValidation
+namespace OpenApi.FluentValidation;
+
+/// <summary>
+/// Name resolver.
+/// Gets property name using naming conventions.
+/// </summary>
+public interface INameResolver
 {
     /// <summary>
-    /// Name resolver.
-    /// Gets property name using naming conventions.
+    /// Gets schema name for property.
     /// </summary>
-    public interface INameResolver
-    {
-        /// <summary>
-        /// Gets schema name for property.
-        /// </summary>
-        /// <param name="propertyInfo">Property info.</param>
-        /// <returns>Property schema name.</returns>
-        string GetPropertyName(PropertyInfo propertyInfo);
-    }
+    /// <param name="propertyInfo">Property info.</param>
+    /// <returns>Property schema name.</returns>
+    string GetPropertyName(PropertyInfo propertyInfo);
 }

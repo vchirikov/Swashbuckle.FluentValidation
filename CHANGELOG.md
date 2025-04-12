@@ -24,7 +24,7 @@
 - Added: MicroElements.NSwag.FluentValidation package. Early version
 - Change: `INameResolver` removed from FluentValidationRules ctor. Set it from `SchemaGenerationOptions`
 - Change: `ISchemaGenerationSettings` merged to `ISchemaGenerationOptions`
-- Change: `IValidatorRegistry` and it's implementations moved to MicroElements.OpenApi.FluentValidation namespace and package
+- Change: `IValidatorRegistry` and it's implementations moved to OpenApi.FluentValidation namespace and package
 - Change: `IValidatorRegistry` can return more than one validator with method `GetValidators`
 - Added: `ValidatorSearch` strategy OneForType, ManyForType
 - Added: `ISchemaGenerationOptions.ValidatorFilter`, `ISchemaGenerationOptions.RuleFilter`, `ISchemaGenerationOptions.RuleComponentFilter`

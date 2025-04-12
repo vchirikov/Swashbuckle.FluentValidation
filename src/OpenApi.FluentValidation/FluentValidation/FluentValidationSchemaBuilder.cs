@@ -1,9 +1,6 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using FluentValidation;
 using FluentValidation.Validators;
 using MicroElements.OpenApi.Core;
@@ -11,162 +8,161 @@ using Microsoft.Extensions.Logging;
 #pragma warning disable SA1611
 #pragma warning disable SA1618
 
-namespace MicroElements.OpenApi.FluentValidation
+namespace OpenApi.FluentValidation;
+
+/// <summary>
+/// Schema builder extensions.
+/// </summary>
+public static class FluentValidationSchemaBuilder
 {
     /// <summary>
-    /// Schema builder extensions.
+    /// Applies rules from validator.
     /// </summary>
-    public static class FluentValidationSchemaBuilder
+    public static void ApplyRulesToSchema<TSchema>(
+        Type schemaType,
+        IEnumerable<string>? schemaPropertyNames,
+        IValidator validator,
+        ILogger logger,
+        ISchemaGenerationContext<TSchema> schemaGenerationContext)
     {
-        /// <summary>
-        /// Applies rules from validator.
-        /// </summary>
-        public static void ApplyRulesToSchema<TSchema>(
-            Type schemaType,
-            IEnumerable<string>? schemaPropertyNames,
-            IValidator validator,
-            ILogger logger,
-            ISchemaGenerationContext<TSchema> schemaGenerationContext)
+        var schemaTypeName = schemaType.Name;
+        TSchema schema = schemaGenerationContext.Schema;
+        ISchemaGenerationOptions schemaGenerationOptions = schemaGenerationContext.SchemaGenerationOptions;
+        IReadOnlyList<IFluentValidationRule<TSchema>> fluentValidationRules = schemaGenerationContext.Rules;
+        schemaPropertyNames ??= schemaGenerationContext.Properties;
+
+        TypeContext typeContext = new TypeContext(schemaType, schemaGenerationOptions);
+        ValidatorContext validatorContext = new ValidatorContext(typeContext, validator);
+
+        var lazyLog = new LazyLog(logger, l => l.LogDebug("Applying FluentValidation rules to swagger schema '{SchemaTypeName}'", schemaTypeName));
+
+        var validationRules = validatorContext
+            .GetValidationRules()
+            .Where(context => context.GetReflectionContext() != null)
+            .ToArray();
+
+        foreach (var schemaPropertyName in schemaPropertyNames)
         {
-            var schemaTypeName = schemaType.Name;
-            TSchema schema = schemaGenerationContext.Schema;
-            ISchemaGenerationOptions schemaGenerationOptions = schemaGenerationContext.SchemaGenerationOptions;
-            IReadOnlyList<IFluentValidationRule<TSchema>> fluentValidationRules = schemaGenerationContext.Rules;
-            schemaPropertyNames ??= schemaGenerationContext.Properties;
+            var validationRuleInfoList = validationRules
+                .Where(propertyRule => propertyRule.IsMatchesRule(schemaPropertyName, schemaGenerationOptions))
+                .ToArrayDebug();
 
-            TypeContext typeContext = new TypeContext(schemaType, schemaGenerationOptions);
-            ValidatorContext validatorContext = new ValidatorContext(typeContext, validator);
-
-            var lazyLog = new LazyLog(logger, l => l.LogDebug("Applying FluentValidation rules to swagger schema '{SchemaTypeName}'", schemaTypeName));
-
-            var validationRules = validatorContext
-                .GetValidationRules()
-                .Where(context => context.GetReflectionContext() != null)
-                .ToArray();
-
-            foreach (var schemaPropertyName in schemaPropertyNames)
+            foreach (var validationRuleContext in validationRuleInfoList)
             {
-                var validationRuleInfoList = validationRules
-                    .Where(propertyRule => propertyRule.IsMatchesRule(schemaPropertyName, schemaGenerationOptions))
+                var propertyValidators = validationRuleContext
+                    .GetValidators()
                     .ToArrayDebug();
 
-                foreach (var validationRuleContext in validationRuleInfoList)
+                foreach (var propertyValidator in propertyValidators)
                 {
-                    var propertyValidators = validationRuleContext
-                        .GetValidators()
-                        .ToArrayDebug();
-
-                    foreach (var propertyValidator in propertyValidators)
+                    foreach (var rule in fluentValidationRules)
                     {
-                        foreach (var rule in fluentValidationRules)
+                        if (rule.IsMatches(propertyValidator) && rule.Apply is not null)
                         {
-                            if (rule.IsMatches(propertyValidator) && rule.Apply is not null)
+                            try
                             {
-                                try
+                                var ruleHistoryItem = new RuleHistoryCache.RuleCacheItem(schemaTypeName, schemaPropertyName, propertyValidator, rule.Name);
+                                if (!schema!.ContainsRuleHistoryItem(ruleHistoryItem))
                                 {
-                                    var ruleHistoryItem = new RuleHistoryCache.RuleCacheItem(schemaTypeName, schemaPropertyName, propertyValidator, rule.Name);
-                                    if (!schema!.ContainsRuleHistoryItem(ruleHistoryItem))
-                                    {
-                                        lazyLog.LogOnce();
+                                    lazyLog.LogOnce();
 
-                                        IRuleContext<TSchema> ruleContext = schemaGenerationContext.Create(schemaPropertyName, validationRuleContext, propertyValidator);
+                                    IRuleContext<TSchema> ruleContext = schemaGenerationContext.Create(schemaPropertyName, validationRuleContext, propertyValidator);
 
-                                        rule.Apply(ruleContext);
+                                    rule.Apply(ruleContext);
 
-                                        logger.LogDebug("Rule '{RuleName}' applied for property '{SchemaTypeName}.{SchemaPropertyName}'", rule.Name, schemaTypeName, schemaPropertyName);
-                                        schema!.AddRuleHistoryItem(ruleHistoryItem);
-                                    }
-                                    else
-                                    {
-                                        logger.LogDebug("Rule '{RuleName}' already applied for property '{SchemaTypeName}.{SchemaPropertyName}'", rule.Name, schemaTypeName, schemaPropertyName);
-                                    }
+                                    logger.LogDebug("Rule '{RuleName}' applied for property '{SchemaTypeName}.{SchemaPropertyName}'", rule.Name, schemaTypeName, schemaPropertyName);
+                                    schema!.AddRuleHistoryItem(ruleHistoryItem);
                                 }
-                                catch (Exception e)
+                                else
                                 {
-                                    logger.LogWarning(0, e, "Error on apply rule '{RuleName}' for property '{SchemaTypeName}.{SchemaPropertyName}'", rule.Name, schemaTypeName, schemaPropertyName);
+                                    logger.LogDebug("Rule '{RuleName}' already applied for property '{SchemaTypeName}.{SchemaPropertyName}'", rule.Name, schemaTypeName, schemaPropertyName);
                                 }
+                            }
+                            catch (Exception e)
+                            {
+                                logger.LogWarning(0, e, "Error on apply rule '{RuleName}' for property '{SchemaTypeName}.{SchemaPropertyName}'", rule.Name, schemaTypeName, schemaPropertyName);
                             }
                         }
                     }
                 }
             }
         }
+    }
 
-        /// <summary>
-        /// Adds rules from included validators.
-        /// </summary>
-        public static void AddRulesFromIncludedValidators<TSchema>(
-            ValidatorContext validatorContext,
-            ILogger logger,
-            ISchemaGenerationContext<TSchema> schemaGenerationContext)
+    /// <summary>
+    /// Adds rules from included validators.
+    /// </summary>
+    public static void AddRulesFromIncludedValidators<TSchema>(
+        ValidatorContext validatorContext,
+        ILogger logger,
+        ISchemaGenerationContext<TSchema> schemaGenerationContext)
+    {
+        // Note: IValidatorDescriptor doesn't return IncludeRules so we need to get validators manually.
+        var validationRules = validatorContext
+            .GetValidationRules()
+            .ToArrayDebug();
+
+        var propertiesWithChildAdapters = validationRules
+            .Select(context => (
+                context.ValidationRule,
+                context
+                    .GetValidators()
+                    .OfType<IChildValidatorAdaptor>()
+                    .ToArray()))
+            .ToArrayDebug();
+
+        foreach ((IValidationRule propertyRule, IChildValidatorAdaptor[] childAdapters) in propertiesWithChildAdapters)
         {
-            // Note: IValidatorDescriptor doesn't return IncludeRules so we need to get validators manually.
-            var validationRules = validatorContext
-                .GetValidationRules()
-                .ToArrayDebug();
-
-            var propertiesWithChildAdapters = validationRules
-                .Select(context => (
-                    context.ValidationRule,
-                    context
-                        .GetValidators()
-                        .OfType<IChildValidatorAdaptor>()
-                        .ToArray()))
-                .ToArrayDebug();
-
-            foreach ((IValidationRule propertyRule, IChildValidatorAdaptor[] childAdapters) in propertiesWithChildAdapters)
+            foreach (var childAdapter in childAdapters)
             {
-                foreach (var childAdapter in childAdapters)
+                IValidator? childValidator = childAdapter.GetValidatorFromChildValidatorAdapter();
+
+                if (childValidator != null)
                 {
-                    IValidator? childValidator = childAdapter.GetValidatorFromChildValidatorAdapter();
+                    var canValidateInstancesOfType = childValidator.CanValidateInstancesOfType(schemaGenerationContext.SchemaType);
 
-                    if (childValidator != null)
+                    if (childValidator == validatorContext.Validator)
                     {
-                        var canValidateInstancesOfType = childValidator.CanValidateInstancesOfType(schemaGenerationContext.SchemaType);
+                        // Issue: https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/121
+                        // Recursive validation works when using 'this' from SetValidator()
+                        // https://github.com/FluentValidation/FluentValidation/issues/1568
+                        // using skipping prevents the stack overflow exception
+                        continue;
+                    }
 
-                        if (childValidator == validatorContext.Validator)
-                        {
-                            // Issue: https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/121
-                            // Recursive validation works when using 'this' from SetValidator()
-                            // https://github.com/FluentValidation/FluentValidation/issues/1568
-                            // using skipping prevents the stack overflow exception
-                            continue;
-                        }
+                    if (canValidateInstancesOfType)
+                    {
+                        // It's a validator for current type (Include for example) so apply changes to current schema.
+                        ApplyRulesToSchema(
+                            schemaType: schemaGenerationContext.SchemaType,
+                            schemaPropertyNames: schemaGenerationContext.Properties,
+                            validator: childValidator,
+                            logger: logger,
+                            schemaGenerationContext: schemaGenerationContext);
 
-                        if (canValidateInstancesOfType)
-                        {
-                            // It's a validator for current type (Include for example) so apply changes to current schema.
-                            ApplyRulesToSchema(
-                                schemaType: schemaGenerationContext.SchemaType,
-                                schemaPropertyNames: schemaGenerationContext.Properties,
-                                validator: childValidator,
-                                logger: logger,
-                                schemaGenerationContext: schemaGenerationContext);
+                        AddRulesFromIncludedValidators(
+                            validatorContext: new ValidatorContext(validatorContext.TypeContext, childValidator),
+                            logger: logger,
+                            schemaGenerationContext: schemaGenerationContext);
+                    }
+                    else
+                    {
+                        // It's a validator for sub schema so get schema and apply changes to it.
+                        var schemaForChildValidator = schemaGenerationContext.SchemaProvider.GetSchemaForType(propertyRule.TypeToValidate);
 
-                            AddRulesFromIncludedValidators(
-                                validatorContext: new ValidatorContext(validatorContext.TypeContext, childValidator),
-                                logger: logger,
-                                schemaGenerationContext: schemaGenerationContext);
-                        }
-                        else
-                        {
-                            // It's a validator for sub schema so get schema and apply changes to it.
-                            var schemaForChildValidator = schemaGenerationContext.SchemaProvider.GetSchemaForType(propertyRule.TypeToValidate);
+                        var childSchemaContext = schemaGenerationContext.With(schemaForChildValidator);
 
-                            var childSchemaContext = schemaGenerationContext.With(schemaForChildValidator);
+                        ApplyRulesToSchema(
+                            schemaType: propertyRule.TypeToValidate,
+                            schemaPropertyNames: null,
+                            validator: childValidator,
+                            logger: logger,
+                            schemaGenerationContext: childSchemaContext);
 
-                            ApplyRulesToSchema(
-                                schemaType: propertyRule.TypeToValidate,
-                                schemaPropertyNames: null,
-                                validator: childValidator,
-                                logger: logger,
-                                schemaGenerationContext: childSchemaContext);
-
-                            AddRulesFromIncludedValidators(
-                                validatorContext: new ValidatorContext(validatorContext.TypeContext, childValidator),
-                                logger: logger,
-                                schemaGenerationContext: childSchemaContext);
-                        }
+                        AddRulesFromIncludedValidators(
+                            validatorContext: new ValidatorContext(validatorContext.TypeContext, childValidator),
+                            logger: logger,
+                            schemaGenerationContext: childSchemaContext);
                     }
                 }
             }
