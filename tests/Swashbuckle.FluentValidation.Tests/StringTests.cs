@@ -1,4 +1,6 @@
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+using OpenApi.Core;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class StringTests
 {
@@ -11,6 +13,6 @@ public class StringTests
     [InlineData("BlogId", "blog-id", true)]
     public void EqualsIgnoreAll(string left, string right, bool shouldBeEqual)
     {
-        left.EqualsIgnoreAll(right).Should().Be(shouldBeEqual);
+        Assert.Equal(shouldBeEqual, left.EqualsIgnoreAll(right));
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace MicroElements.Swashbuckle.FluentValidation;
+namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// SwaggerMiddleware that resolves <see cref="ISwaggerProvider"/> on scope.

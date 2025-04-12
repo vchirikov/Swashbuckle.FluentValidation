@@ -4,7 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
-namespace MicroElements.OpenApi.Core;
+namespace OpenApi.Core;
 
 /// <summary>
 /// Helps to log something only once in some context.

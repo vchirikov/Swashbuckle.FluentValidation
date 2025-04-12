@@ -3,7 +3,7 @@
 
 using FluentValidation;
 using FluentValidation.Internal;
-using MicroElements.OpenApi.Core;
+using OpenApi.Core;
 
 namespace OpenApi.FluentValidation;
 

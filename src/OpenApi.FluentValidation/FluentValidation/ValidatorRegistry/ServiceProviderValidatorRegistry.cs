@@ -23,7 +23,8 @@ public class ServiceProviderValidatorRegistry : IValidatorRegistry
         IServiceProvider serviceProvider,
         IOptions<SchemaGenerationOptions>? options = null)
     {
-        _serviceProvider = serviceProvider.AssertArgumentNotNull(nameof(serviceProvider));
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        _serviceProvider = serviceProvider;
         _options = options?.Value ?? new SchemaGenerationOptions();
     }
 

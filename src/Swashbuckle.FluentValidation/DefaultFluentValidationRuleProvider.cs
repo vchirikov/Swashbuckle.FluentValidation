@@ -3,12 +3,12 @@
 
 using FluentValidation.Validators;
 using MicroElements.OpenApi;
-using MicroElements.OpenApi.Core;
+using OpenApi.Core;
 using OpenApi.FluentValidation;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
-namespace MicroElements.Swashbuckle.FluentValidation;
+namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// Default rule provider.

@@ -5,7 +5,7 @@ using OpenApi.FluentValidation;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Swashbuckle.FluentValidation;
+namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// SchemaProvider implementation for Swashbuckle.

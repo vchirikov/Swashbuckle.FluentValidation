@@ -1,4 +1,7 @@
-﻿namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+﻿using FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class TreeValidatorTest : UnitTestBase
 {
@@ -35,11 +38,11 @@ public class TreeValidatorTest : UnitTestBase
             .GenerateSchema(typeof(Node), schemaRepository);
 
         // if we have gotten this far, huzza, no stack overflow.
-        
+
         // MicroElements schema validation should work normally on other non-recursive properties 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var idProperty = schema.Properties[nameof(Node.Id)];
-        idProperty.Type.Should().Be("string");
-        idProperty.MinLength.Should().Be(1);
+        Assert.Equal("string", idProperty.Type);
+        Assert.Equal(1, idProperty.MinLength);
     }
 }

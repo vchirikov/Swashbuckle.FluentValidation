@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 // ReSharper disable UnusedTupleComponentInReturnValue
-namespace MicroElements.OpenApi.Core;
+namespace OpenApi.Core;
 
 /// <summary>
 /// Very light functional extensions.

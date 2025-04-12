@@ -9,7 +9,7 @@
     <RepoName>Swashbuckle.FluentValidation</RepoName>
     <UserSecretsId>$(RepoName)</UserSecretsId>
     <Authors>Vladimir Chirikov, Alexey Petryashev</Authors>
-    <Description>Personal fork of MicroElements.Swashbuckle.FluentValidation</Description>
+    <Description>Personal fork of Swashbuckle.FluentValidation</Description>
     <RepositoryUrl>https://github.com/vchirikov/Swashbuckle.FluentValidation</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>

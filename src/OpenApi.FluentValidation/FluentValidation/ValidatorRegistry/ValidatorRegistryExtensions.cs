@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using FluentValidation;
-using MicroElements.OpenApi.Core;
+using OpenApi.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace OpenApi.FluentValidation;

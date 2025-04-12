@@ -1,10 +1,13 @@
-﻿namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+﻿using FluentValidation;
+using OpenApi.FluentValidation;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class RuleHistoryCacheTest
 {
     public class Sample
     {
-        public string? Name { get; set;}
+        public string? Name { get; set; }
     }
 
     public class SampleValidator : AbstractValidator<Sample>
@@ -18,7 +21,7 @@ public class RuleHistoryCacheTest
 
     [Fact]
     // Issue 143 https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/143
-    public void DuplicateCachItem()
+    public void DuplicateCacheItem()
     {
         var key = new object();
         var cacheItem1 = CreateCacheItem();

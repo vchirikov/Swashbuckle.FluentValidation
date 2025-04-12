@@ -4,14 +4,14 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using OpenApi.FluentValidation;
-using MicroElements.Swashbuckle.FluentValidation.Generation;
+using Swashbuckle.FluentValidation.Generation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+namespace Swashbuckle.FluentValidation.AspNetCore;
 
 /// <summary>
 /// ServiceCollection extensions.

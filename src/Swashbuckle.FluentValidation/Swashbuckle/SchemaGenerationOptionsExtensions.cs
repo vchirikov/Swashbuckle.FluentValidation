@@ -5,7 +5,7 @@ using OpenApi.FluentValidation;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Swashbuckle.FluentValidation;
+namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// Extensions methods for <see cref="SchemaGenerationOptions"/>.

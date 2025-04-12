@@ -1,4 +1,7 @@
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+using FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 /// <summary>
 /// https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/94
@@ -64,9 +67,9 @@ public class Issue94 : UnitTestBase
             .GenerateSchema(typeof(Person), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
-        schema.Properties.Keys.Should().BeEquivalentTo("Name", "Emails");
+        Assert.Equivalent(new string[] { "Name", "Emails" }, schema.Properties.Keys);
         var nameProperty = schema.Properties[nameof(Person.Name)];
-        nameProperty.Type.Should().Be("string");
-        nameProperty.MaxLength.Should().Be(101);
+        Assert.Equal("string", nameProperty.Type);
+        Assert.Equal(101, nameProperty.MaxLength);
     }
 }

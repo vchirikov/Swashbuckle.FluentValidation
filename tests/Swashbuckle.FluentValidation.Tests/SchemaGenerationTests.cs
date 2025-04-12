@@ -1,7 +1,12 @@
 using System.Collections;
 using System.Text.Json.Serialization;
+using FluentValidation;
+using FluentValidation.Validators;
+using MicroElements.OpenApi;
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+namespace Swashbuckle.FluentValidation.Tests;
 
 public partial class SchemaGenerationTests : UnitTestBase
 {
@@ -30,15 +35,15 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schemaRepository = new SchemaRepository();
         var referenceSchema = SchemaGenerator(new ComplexObjectValidator()).GenerateSchema(typeof(ComplexObject), schemaRepository);
 
-        referenceSchema.Reference.Should().NotBeNull();
-        referenceSchema.Reference.Id.Should().Be("ComplexObject");
+        Assert.NotNull(referenceSchema.Reference);
+        Assert.Equal("ComplexObject", referenceSchema.Reference.Id);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         Assert.Equal("object", schema.Type);
-        schema.Properties.Keys.Should().BeEquivalentTo(TextProperty1, TextProperty2, TextProperty3);
+        Assert.Equivalent(new string[] { TextProperty1, TextProperty2, TextProperty3, }, schema.Properties.Keys);
 
-        schema.Properties[TextProperty1].MinLength.Should().Be(1);
+        Assert.Equal(1, schema.Properties[TextProperty1].MinLength);
     }
 
     public class Validator2 : AbstractValidator<ComplexObject>
@@ -59,13 +64,13 @@ public partial class SchemaGenerationTests : UnitTestBase
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
-        schema.Properties[TextProperty1].MinLength.Should().Be(1);
-        schema.Properties[TextProperty1].MaxLength.Should().Be(64);
-        schema.Properties[TextProperty1].Nullable.Should().BeFalse();
+        Assert.Equal(1, schema.Properties[TextProperty1].MinLength);
+        Assert.Equal(64, schema.Properties[TextProperty1].MaxLength);
+        Assert.False(schema.Properties[TextProperty1].Nullable);
 
-        schema.Properties[TextProperty2].MinLength.Should().Be(1);
-        schema.Properties[TextProperty2].MaxLength.Should().Be(64);
-        schema.Properties[TextProperty2].Nullable.Should().BeFalse();
+        Assert.Equal(1, schema.Properties[TextProperty2].MinLength);
+        Assert.Equal(64, schema.Properties[TextProperty2].MaxLength);
+        Assert.False(schema.Properties[TextProperty2].Nullable);
     }
 
     /// <summary>
@@ -79,8 +84,55 @@ public partial class SchemaGenerationTests : UnitTestBase
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
-        schema.Properties[TextProperty3].MaxLength.Should().Be(64);
-        schema.Properties[TextProperty3].Nullable.Should().BeFalse();
+        Assert.Equal(64, schema.Properties[TextProperty3].MaxLength);
+        Assert.False(schema.Properties[TextProperty3].Nullable);
+    }
+
+    public class Sample
+    {
+        public string PropertyWithNoRules { get; set; }
+
+        public string NotNull { get; set; }
+        public string NotEmpty { get; set; }
+        public string EmailAddressRegex { get; set; }
+        public string EmailAddress { get; set; }
+        public string RegexField { get; set; }
+
+        public int ValueInRange { get; set; }
+        public int ValueInRangeExclusive { get; set; }
+
+        public float ValueInRangeFloat { get; set; }
+        public double ValueInRangeDouble { get; set; }
+        public decimal DecimalValue { get; set; }
+
+        public string NotEmptyWithMaxLength { get; set; }
+
+        // ReSharper disable once InconsistentNaming
+        // https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/10
+        public string javaStyleProperty { get; set; }
+    }
+
+    public class SampleValidator : AbstractValidator<Sample>
+    {
+        public SampleValidator()
+        {
+            RuleFor(sample => sample.NotNull).NotNull();
+            RuleFor(sample => sample.NotEmpty).NotEmpty();
+            RuleFor(sample => sample.EmailAddressRegex).EmailAddress(EmailValidationMode.Net4xRegex);
+            RuleFor(sample => sample.EmailAddress).EmailAddress(EmailValidationMode.AspNetCoreCompatible);
+            RuleFor(sample => sample.RegexField).Matches(@"(\d{4})-(\d{2})-(\d{2})");
+
+            RuleFor(sample => sample.ValueInRange).GreaterThanOrEqualTo(5).LessThanOrEqualTo(10);
+            RuleFor(sample => sample.ValueInRangeExclusive).GreaterThan(5).LessThan(10);
+
+            RuleFor(sample => sample.ValueInRangeFloat).InclusiveBetween(5.1f, 10.2f);
+            RuleFor(sample => sample.ValueInRangeDouble).ExclusiveBetween(5.1, 10.2);
+            RuleFor(sample => sample.DecimalValue).InclusiveBetween(1.333m, 200.333m);
+
+            RuleFor(sample => sample.javaStyleProperty).MaximumLength(6);
+
+            RuleFor(sample => sample.NotEmptyWithMaxLength).NotEmpty().MaximumLength(50);
+        }
     }
 
     [Fact]
@@ -90,74 +142,128 @@ public partial class SchemaGenerationTests : UnitTestBase
         var referenceSchema = SchemaGenerator(new SampleValidator()).GenerateSchema(typeof(Sample), schemaRepository);
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
-        schema.Type.Should().Be("object");
-        schema.Properties.Keys.Count.Should().Be(13);
+        Assert.Equal("object", schema.Type);
+        Assert.Equal(13, schema.Properties.Keys.Count);
 
 
-        schema.Properties["NotNull"].Nullable.Should().BeFalse();
-        schema.Required.Should().Contain("NotNull");
+        Assert.False(schema.Properties["NotNull"].Nullable);
+        Assert.Contains("NotNull", schema.Required);
 
-        schema.Properties["NotEmpty"].MinLength.Should().Be(1);
+        Assert.Equal(1, schema.Properties["NotEmpty"].MinLength);
 
-        schema.Properties["EmailAddressRegex"].Pattern.Should().NotBeNullOrEmpty();
-        schema.Properties["EmailAddressRegex"].Format.Should().Be("email");
-        schema.Properties["EmailAddress"].Format.Should().Be("email");
+        Assert.NotNull(schema.Properties["EmailAddressRegex"].Pattern);
+        Assert.NotEmpty(schema.Properties["EmailAddressRegex"].Pattern);
+        Assert.Equal("email", schema.Properties["EmailAddressRegex"].Format);
+        Assert.Equal("email", schema.Properties["EmailAddress"].Format);
 
-        schema.Properties["RegexField"].Pattern.Should().Be(@"(\d{4})-(\d{2})-(\d{2})");
+        Assert.Equal(@"(\d{4})-(\d{2})-(\d{2})", schema.Properties["RegexField"].Pattern);
 
-        schema.Properties["ValueInRange"].Minimum.Should().Be(5);
-        schema.Properties["ValueInRange"].ExclusiveMinimum.Should().BeNull();
-        schema.Properties["ValueInRange"].Maximum.Should().Be(10);
-        schema.Properties["ValueInRange"].ExclusiveMaximum.Should().BeNull();
+        Assert.Equal(5, schema.Properties["ValueInRange"].Minimum);
+        Assert.Null(schema.Properties["ValueInRange"].ExclusiveMinimum);
+        Assert.Equal(10, schema.Properties["ValueInRange"].Maximum);
+        Assert.Null(schema.Properties["ValueInRange"].ExclusiveMaximum);
 
-        schema.Properties["ValueInRangeExclusive"].Minimum.Should().Be(5);
-        schema.Properties["ValueInRangeExclusive"].ExclusiveMinimum.Should().BeTrue();
-        schema.Properties["ValueInRangeExclusive"].Maximum.Should().Be(10);
-        schema.Properties["ValueInRangeExclusive"].ExclusiveMaximum.Should().BeTrue();
+        Assert.Equal(5, schema.Properties["ValueInRangeExclusive"].Minimum);
+        Assert.True(schema.Properties["ValueInRangeExclusive"].ExclusiveMinimum);
+        Assert.Equal(10, schema.Properties["ValueInRangeExclusive"].Maximum);
+        Assert.True(schema.Properties["ValueInRangeExclusive"].ExclusiveMaximum);
 
-        schema.Properties["ValueInRangeFloat"].Minimum.Should().Be((decimal)5.1f);
-        schema.Properties["ValueInRangeFloat"].ExclusiveMinimum.Should().BeNull();
-        schema.Properties["ValueInRangeFloat"].Maximum.Should().Be((decimal)10.2f);
-        schema.Properties["ValueInRangeFloat"].ExclusiveMaximum.Should().BeNull();
+        Assert.Equal((decimal)5.1f, schema.Properties["ValueInRangeFloat"].Minimum);
+        Assert.Null(schema.Properties["ValueInRangeFloat"].ExclusiveMinimum);
+        Assert.Equal((decimal)10.2f, schema.Properties["ValueInRangeFloat"].Maximum);
+        Assert.Null(schema.Properties["ValueInRangeFloat"].ExclusiveMaximum);
 
-        schema.Properties["ValueInRangeDouble"].Minimum.Should().Be((decimal)5.1d);
-        schema.Properties["ValueInRangeDouble"].ExclusiveMinimum.Should().BeTrue();
-        schema.Properties["ValueInRangeDouble"].Maximum.Should().Be((decimal)10.2d);
-        schema.Properties["ValueInRangeDouble"].ExclusiveMaximum.Should().BeTrue();
+        Assert.Equal((decimal)5.1d, schema.Properties["ValueInRangeDouble"].Minimum);
+        Assert.True(schema.Properties["ValueInRangeDouble"].ExclusiveMinimum);
+        Assert.Equal((decimal)10.2d, schema.Properties["ValueInRangeDouble"].Maximum);
+        Assert.True(schema.Properties["ValueInRangeDouble"].ExclusiveMaximum);
 
-        schema.Properties["DecimalValue"].Minimum.Should().Be(1.333m);
-        schema.Properties["DecimalValue"].ExclusiveMinimum.Should().BeNull();
-        schema.Properties["DecimalValue"].Maximum.Should().Be(200.333m);
-        schema.Properties["DecimalValue"].ExclusiveMaximum.Should().BeNull();
+        Assert.Equal(1.333m, schema.Properties["DecimalValue"].Minimum);
+        Assert.Null(schema.Properties["DecimalValue"].ExclusiveMinimum);
+        Assert.Equal(200.333m, schema.Properties["DecimalValue"].Maximum);
+        Assert.Null(schema.Properties["DecimalValue"].ExclusiveMaximum);
 
-        schema.Properties["NotEmptyWithMaxLength"].MinLength.Should().Be(1);
-        schema.Properties["NotEmptyWithMaxLength"].MaxLength.Should().Be(50);
+        Assert.Equal(1, schema.Properties["NotEmptyWithMaxLength"].MinLength);
+        Assert.Equal(50, schema.Properties["NotEmptyWithMaxLength"].MaxLength);
     }
+    public class Customer
+    {
+        public int Id { get; set; }
+        public string Surname { get; set; }
+        public string Forename { get; set; }
+        public decimal Discount { get; set; }
+        public string Address { get; set; }
+    }
+    public class CustomerValidator : AbstractValidator<Customer>
+    {
+        public CustomerValidator()
+        {
+            When(customer => customer.Id == 1, () => {
+                RuleFor(customer => customer.Discount)
+                    .NotEmpty()
+                    .WithMessage("This WILL NOT be in the OpenAPI  spec.");
+            });
 
+            RuleFor(customer => customer.Discount)
+                .ExclusiveBetween(4, 5)
+                .WithMessage("This WILL be in the OpenAPI spec.");
+            RuleFor(customer => customer.Discount)
+                .NotEmpty()
+                .WhenAsync((customer, token) => Task.FromResult(customer.Id == 1))
+                .WithMessage("This WILL NOT be in the OpenAPI spec.");
+
+            RuleFor(customer => customer.Surname)
+                .NotEmpty();
+
+            RuleFor(customer => customer.Forename)
+                .NotEmpty()
+                .WithMessage("Please specify a first name");
+
+            Include(new CustomerAddressValidator());
+        }
+    }
+    internal class CustomerAddressValidator : AbstractValidator<Customer>
+    {
+        public CustomerAddressValidator()
+        {
+            UnlessAsync((customer, token) => Task.FromResult(customer.Surname == "Test"), () => {
+                RuleFor(customer => customer.Discount)
+                    .NotEmpty()
+                    .WithMessage("This WILL NOT be in the OpenAPI spec.");
+            });
+
+            RuleFor(customer => customer.Discount)
+                .NotEmpty()
+                .Unless(customer => customer.Surname == "Test")
+                .WithMessage("This WILL NOT be in the OpenAPI spec.");
+
+            RuleFor(customer => customer.Address)
+                .Length(20, 250);
+        }
+    }
     [Fact]
     public void CustomerValidator_FromSampleApi_Test()
     {
         var schemaRepository = new SchemaRepository();
         var referenceSchema = SchemaGenerator(new CustomerValidator()).GenerateSchema(typeof(Customer), schemaRepository);
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
-        schema.Properties["Surname"].MinLength.Should().Be(1);
-        schema.Properties["Forename"].MinLength.Should().Be(1);
+        Assert.Equal(1, schema.Properties["Surname"].MinLength);
+        Assert.Equal(1, schema.Properties["Forename"].MinLength);
 
         // From included validator
-        schema.Properties["Address"].MinLength.Should().Be(20);
-        schema.Properties["Address"].MaxLength.Should().Be(250);
+        Assert.Equal(20, schema.Properties["Address"].MinLength);
+        Assert.Equal(250, schema.Properties["Address"].MaxLength);
 
-        schema.Properties["Discount"].Should().BeEquivalentTo(new OpenApiSchema()
-        {
+        Assert.Equivalent(new OpenApiSchema() {
             Type = "number",
             Format = "double",
             Minimum = 4,
             ExclusiveMinimum = true,
             Maximum = 5,
             ExclusiveMaximum = true
-        });
+        }, schema.Properties["Discount"]);
 
-        schema.Properties.Keys.Count.Should().Be(5);
+        Assert.Equal(5, schema.Properties.Keys.Count);
     }
 
     [Theory]
@@ -172,7 +278,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         schemaProperty.SetNewMax(p => p.MaxLength, first);
         schemaProperty.SetNewMax(p => p.MaxLength, second);
 
-        schemaProperty.MaxLength.Should().Be(expected);
+        Assert.Equal(expected, schemaProperty.MaxLength);
     }
 
     [Theory]
@@ -187,7 +293,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         schemaProperty.SetNewMin(p => p.MinLength, first);
         schemaProperty.SetNewMin(p => p.MinLength, second);
 
-        schemaProperty.MinLength.Should().Be(expected);
+        Assert.Equal(expected, schemaProperty.MinLength);
     }
 
     public class Person
@@ -216,10 +322,10 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var emailsProp = schema.Properties[nameof(Person.Emails)];
 
-        emailsProp.Format.Should().Be(null);
+        Assert.Equal(null, emailsProp.Format);
 
-        emailsProp.Items.Type.Should().Be("string");
-        emailsProp.Items.Format.Should().Be("email");
+        Assert.Equal("string", emailsProp.Items.Type);
+        Assert.Equal("email", emailsProp.Items.Format);
     }
 
     public class NumberEntity
@@ -248,7 +354,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         // *************************
 
         void ShouldBeSuccess(NumberEntity entity) => new NumberEntity.Validator().ValidateAndThrow(entity);
-        void ShouldBeFailed(NumberEntity entity) => new NumberEntity.Validator().Validate(entity).IsValid.Should().BeFalse();
+        void ShouldBeFailed(NumberEntity entity) => Assert.False(new NumberEntity.Validator().Validate(entity).IsValid);
 
         ShouldBeSuccess(new NumberEntity() { Number = 1 });
         ShouldBeFailed(new NumberEntity() { Number = 0 });
@@ -268,16 +374,16 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         var numberProp = schema.Properties[nameof(NumberEntity.Number)];
-        numberProp.Type.Should().Be("integer");
-        numberProp.Nullable.Should().Be(false);
-        numberProp.Minimum.Should().Be(0);
-        numberProp.ExclusiveMinimum.Should().Be(true);
+        Assert.Equal("integer", numberProp.Type);
+        Assert.False(numberProp.Nullable);
+        Assert.Equal(0, numberProp.Minimum);
+        Assert.Equal(true, numberProp.ExclusiveMinimum);
 
         var nullableNumberProp = schema.Properties[nameof(NumberEntity.NullableNumber)];
-        nullableNumberProp.Type.Should().Be("integer");
-        nullableNumberProp.Nullable.Should().Be(true);
-        nullableNumberProp.Minimum.Should().Be(0);
-        nullableNumberProp.ExclusiveMinimum.Should().Be(true);
+        Assert.Equal("integer", nullableNumberProp.Type);
+        Assert.True(nullableNumberProp.Nullable);
+        Assert.Equal(0, nullableNumberProp.Minimum);
+        Assert.Equal(true, nullableNumberProp.ExclusiveMinimum);
     }
 
 
@@ -294,12 +400,12 @@ public partial class SchemaGenerationTests : UnitTestBase
         new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.TextValue,
                 rule => rule.MaximumLength(5),
-                schema => schema.Nullable.Should().Be(true));
+                schema => Assert.True(schema.Nullable));
 
         new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.NullableTextValue,
                 rule => rule.MaximumLength(5),
-                schema => schema.Nullable.Should().Be(true));
+                schema => Assert.True(schema.Nullable));
     }
 
     [Fact]
@@ -308,8 +414,8 @@ public partial class SchemaGenerationTests : UnitTestBase
         var property = new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.TextValue, rule => rule.NotNull().MinimumLength(1));
 
-        property.Nullable.Should().Be(false);
-        property.MinLength.Should().Be(1);
+        Assert.False(property.Nullable);
+        Assert.Equal(1, property.MinLength);
     }
 
     [Fact]
@@ -317,26 +423,23 @@ public partial class SchemaGenerationTests : UnitTestBase
     {
         // without options. property is nullable, min length is set.
         new SchemaBuilder<TestEntity>()
-            .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema =>
-            {
-                schema.Nullable.Should().Be(true);
-                schema.MinLength.Should().Be(1);
+            .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema => {
+                Assert.True(schema.Nullable);
+                Assert.Equal(1, schema.MinLength);
             });
 
         new SchemaBuilder<TestEntity>()
             .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
-            .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema =>
-            {
-                schema.Nullable.Should().Be(true);
-                schema.MinLength.Should().Be(1);
+            .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema => {
+                Assert.True(schema.Nullable);
+                Assert.Equal(1, schema.MinLength);
             });
 
         new SchemaBuilder<TestEntity>()
             .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
-            .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema =>
-            {
-                schema.Nullable.Should().Be(false);
-                schema.MinLength.Should().Be(1);
+            .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema => {
+                Assert.False(schema.Nullable);
+                Assert.Equal(1, schema.MinLength);
             });
     }
 
@@ -355,7 +458,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         new SchemaBuilder<BestShot>()
             .AddRule(entity => entity.Link,
                 rule => rule.MinimumLength(5),
-                schema => schema.MinLength.Should().Be(5));
+                schema => Assert.Equal(5, schema.MinLength));
     }
 
     public class MinMaxLength
@@ -385,17 +488,17 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         if (min > 0)
-            schema.Properties[nameof(MinMaxLength.Name)].MinLength.Should().Be(min);
+            Assert.Equal(min, schema.Properties[nameof(MinMaxLength.Name)].MinLength);
         else
-            schema.Properties[nameof(MinMaxLength.Name)].MinLength.Should().BeNull();
+            Assert.Null(schema.Properties[nameof(MinMaxLength.Name)].MinLength);
         if (max > 0)
-            schema.Properties[nameof(MinMaxLength.Name)].MaxLength.Should().Be(max);
+            Assert.Equal(max, schema.Properties[nameof(MinMaxLength.Name)].MaxLength);
         else
-            schema.Properties[nameof(MinMaxLength.Name)].MaxLength.Should().BeNull();
+            Assert.Null(schema.Properties[nameof(MinMaxLength.Name)].MaxLength);
 
         // MinItems / MaxItems shoiuld not be set for strings
-        schema.Properties[nameof(MinMaxLength.Name)].MinItems.Should().BeNull();
-        schema.Properties[nameof(MinMaxLength.Name)].MaxItems.Should().BeNull();
+        Assert.Null(schema.Properties[nameof(MinMaxLength.Name)].MinItems);
+        Assert.Null(schema.Properties[nameof(MinMaxLength.Name)].MaxItems);
     }
 
     [Theory]
@@ -410,17 +513,17 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         // MinLength / MaxLength should not be set for arrays
-        schema.Properties[nameof(MinMaxLength.Qualities)].MinLength.Should().BeNull();
-        schema.Properties[nameof(MinMaxLength.Qualities)].MaxLength.Should().BeNull();
+        Assert.Null(schema.Properties[nameof(MinMaxLength.Qualities)].MinLength);
+        Assert.Null(schema.Properties[nameof(MinMaxLength.Qualities)].MaxLength);
 
         if (min > 0)
-            schema.Properties[nameof(MinMaxLength.Qualities)].MinItems.Should().Be(min);
+            Assert.Equal(min, schema.Properties[nameof(MinMaxLength.Qualities)].MinItems);
         else
-            schema.Properties[nameof(MinMaxLength.Qualities)].MinItems.Should().BeNull();
+            Assert.Null(schema.Properties[nameof(MinMaxLength.Qualities)].MinItems);
         if (max > 0)
-            schema.Properties[nameof(MinMaxLength.Qualities)].MaxItems.Should().Be(max);
+            Assert.Equal(max, schema.Properties[nameof(MinMaxLength.Qualities)].MaxItems);
         else
-            schema.Properties[nameof(MinMaxLength.Qualities)].MaxItems.Should().BeNull();
+            Assert.Null(schema.Properties[nameof(MinMaxLength.Qualities)].MaxItems);
     }
 
     [Fact]
@@ -428,8 +531,7 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void DerivedSample_ShouldHave_ValidationRulesApplied()
     {
         var schemaRepository = new SchemaRepository();
-        var schemaGenerator = SchemaGenerator(options =>
-        {
+        var schemaGenerator = SchemaGenerator(options => {
             options.UseAllOfForInheritance = true;
             ConfigureGenerator(options, [new DervidedSampleValidator()]);
         });
@@ -439,20 +541,20 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         // Should be empty after the change made because of the issue https://github.com/domaindrivendev/Swashbuckle.AspNetCore/issues/3021
-        schema.Properties.Should().BeEmpty();
-        schema.AllOf.Should().HaveCount(2);
+        Assert.Empty(schema.Properties);
+        Assert.Equal(2, schema.AllOf.Count);
 
         var derivedSampleSchema = schema.AllOf.FirstOrDefault(s => s.Type == "object");
 
         Assert.NotNull(derivedSampleSchema);
 
-        derivedSampleSchema.Properties.Should().HaveCount(1);
+        Assert.Single(derivedSampleSchema.Properties);
         var propertySchema = derivedSampleSchema.Properties.First().Value;
-        propertySchema.MaxLength.Should().Be(255);
-        propertySchema.MinLength.Should().Be(1);
+        Assert.Equal(255, propertySchema.MaxLength);
+        Assert.Equal(1, propertySchema.MinLength);
 
-        derivedSampleSchema.Required.Should().HaveCount(1);
-        derivedSampleSchema.Required.First().Should().Be("Name");
+        Assert.Single(derivedSampleSchema.Required);
+        Assert.Equal("Name", derivedSampleSchema.Required.First());
     }
 }
 
@@ -498,8 +600,7 @@ public static class ValidatorExtensions
 
         public override bool IsValid(ValidationContext<T> context, TProperty value)
         {
-            if (value is IList listvalue)
-            {
+            if (value is IList listvalue) {
                 return listvalue.Count >= this.Min && listvalue.Count <= this.Max;
             }
 
@@ -508,12 +609,10 @@ public static class ValidatorExtensions
 
         protected override string GetDefaultMessageTemplate(string errorCode)
         {
-            if (this.Min == 0)
-            {
+            if (this.Min == 0) {
                 return $"The number of elements in '{{PropertyName}}' must not exceed '{Max}'.";
             }
-            else
-            {
+            else {
                 return $"The number of elements in '{{PropertyName}}' must be between '{Min}' and '{Max}'.";
             }
         }

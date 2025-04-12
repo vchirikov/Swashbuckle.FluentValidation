@@ -5,7 +5,7 @@ using System.Reflection;
 using FluentValidation;
 using FluentValidation.Internal;
 using FluentValidation.Validators;
-using MicroElements.OpenApi.Core;
+using OpenApi.Core;
 
 namespace OpenApi.FluentValidation;
 

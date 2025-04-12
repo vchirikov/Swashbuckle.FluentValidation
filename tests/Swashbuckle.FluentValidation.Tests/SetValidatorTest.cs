@@ -1,4 +1,7 @@
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+using FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 /// <summary>
 /// https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/68
@@ -47,8 +50,8 @@ public class SetValidatorTest : UnitTestBase
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var emailProperty = schema.Properties[nameof(RegisterUserRequest.Email)];
-        emailProperty.Type.Should().Be("string");
-        emailProperty.Format.Should().Be("email");
-        emailProperty.MinLength.Should().Be(1);
+        Assert.Equal("string", emailProperty.Type);
+        Assert.Equal("email", emailProperty.Format);
+        Assert.Equal(1, emailProperty.MinLength);
     }
 }

@@ -1,4 +1,12 @@
-﻿namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+﻿using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
+using OpenApi.FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class SwaggerTestHost
 {
@@ -21,16 +29,15 @@ public class SwaggerTestHost
         Action<RegistrationOptions>? configureRegistration = null)
     {
         // Add FV
-        Services.AddFluentValidation();
+        Services.AddValidatorsFromAssemblyContaining(typeof(SwaggerTestHost));
 
         // Json options by default no name policy.
         Services.Configure<JsonOptions>(options => options.JsonSerializerOptions.PropertyNamingPolicy = null);
 
         // Add Swagger
-        Services.AddSwaggerGen(c =>
-        {
-            c.SwaggerDoc("v1", new OpenApiInfo{ Title = "API", Version = "v1" });
-            c.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
+        Services.AddSwaggerGen(c => {
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+            //c.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
         });
 
         // Add FV Rules to swagger

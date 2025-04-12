@@ -3,7 +3,7 @@
 
 using FluentValidation;
 using FluentValidation.Validators;
-using MicroElements.OpenApi.Core;
+using OpenApi.Core;
 using Microsoft.Extensions.Logging;
 #pragma warning disable SA1611
 #pragma warning disable SA1618

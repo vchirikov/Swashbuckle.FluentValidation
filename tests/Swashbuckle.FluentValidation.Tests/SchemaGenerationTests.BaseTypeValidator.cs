@@ -1,4 +1,7 @@
-﻿namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+﻿using FluentValidation;
+using OpenApi.FluentValidation;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public partial class SchemaGenerationTests
 {
@@ -8,20 +11,19 @@ public partial class SchemaGenerationTests
     public void BaseTypeValidator(bool searchBaseTypeValidators)
     {
         new SwaggerTestHost()
-            .Configure(options => options.ValidatorSearch = new ValidatorSearchSettings{SearchBaseTypeValidators = searchBaseTypeValidators})
+            .Configure(options => options.ValidatorSearch = new ValidatorSearchSettings { SearchBaseTypeValidators = searchBaseTypeValidators })
             .RegisterValidator<AbstractInstitutionModelValidator>()
             .GenerateSchema<AbstractInstitutionModel>(out var schemaBase)
             .GenerateSchema<InstitutionModel>(out var schemaChild);
 
-        if (searchBaseTypeValidators)
-        {
-            schemaBase.Properties["Name"].MaxLength.Should().Be(100);
-            schemaChild.Properties["Name"].MaxLength.Should().Be(100);
+        if (searchBaseTypeValidators) {
+            Assert.Equal(100, schemaBase.Properties["Name"].MaxLength);
+            Assert.Equal(100, schemaChild.Properties["Name"].MaxLength);
         }
-        else
-        {
-            schemaBase.Properties["Name"].MaxLength.Should().Be(100);
-            schemaChild.Properties["Name"].MaxLength.Should().Be(null, because: "Validator is for base type and no validator was for concrete type");
+        else {
+            Assert.Equal(100, schemaBase.Properties["Name"].MaxLength);
+            // because: "Validator is for base type and no validator was for concrete type"
+            Assert.Null(schemaChild.Properties["Name"].MaxLength);
         }
     }
 

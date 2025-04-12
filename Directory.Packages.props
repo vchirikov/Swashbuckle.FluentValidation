@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup Label="Nupkg Versions">
     <PackageVersion Include="FluentValidation" Version="$(FluentValidationVersion)"/>
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="$(FluentValidationVersion)"/>
     <PackageVersion Include="IgnoresAccessChecksToGenerator" Version="0.8.0"/>
     <PackageVersion Include="Meziantou.Analyzer" Version="2.0.196"/>
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0"/>

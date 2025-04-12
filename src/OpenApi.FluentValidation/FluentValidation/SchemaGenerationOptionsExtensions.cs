@@ -1,7 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.OpenApi.Core;
+using OpenApi.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace OpenApi.FluentValidation;

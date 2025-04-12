@@ -1,4 +1,9 @@
-﻿namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class IFormFileTests : UnitTestBase
 {
@@ -26,8 +31,8 @@ public class IFormFileTests : UnitTestBase
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var fileProperty = schema.Properties[nameof(UploadFileRequest.File)];
-        fileProperty.Type.Should().Be("string");
-        fileProperty.Format.Should().Be("binary");
-        fileProperty.Nullable.Should().Be(false);
+        Assert.Equal("string", fileProperty.Type);
+        Assert.Equal("binary", fileProperty.Format);
+        Assert.False(fileProperty.Nullable);
     }
 }

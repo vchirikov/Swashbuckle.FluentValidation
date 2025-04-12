@@ -1,7 +1,7 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MicroElements.OpenApi.Core;
+namespace OpenApi.Core;
 
 /// <summary>
 /// Returns string equality only by symbols ignore case.
@@ -23,14 +23,12 @@ public class IgnoreAllStringComparer : StringComparer
         int leftIndex = 0;
         int rightIndex = 0;
         int compare;
-        while (true)
-        {
+        while (true) {
             GetNextSymbol(left, ref leftIndex, out char leftSymbol);
             GetNextSymbol(right, ref rightIndex, out char rightSymbol);
 
             compare = leftSymbol.CompareTo(rightSymbol);
-            if (compare != 0 || leftIndex < 0 || rightIndex < 0)
-            {
+            if (compare != 0 || leftIndex < 0 || rightIndex < 0) {
                 break;
             }
         }
@@ -47,14 +45,12 @@ public class IgnoreAllStringComparer : StringComparer
         int leftIndex = 0;
         int rightIndex = 0;
         bool equals;
-        while (true)
-        {
+        while (true) {
             bool hasLeftSymbol = GetNextSymbol(left, ref leftIndex, out char leftSymbol);
             bool hasRightSymbol = GetNextSymbol(right, ref rightIndex, out char rightSymbol);
 
             equals = leftSymbol == rightSymbol;
-            if (!equals || !hasLeftSymbol || !hasRightSymbol)
-            {
+            if (!equals || !hasLeftSymbol || !hasRightSymbol) {
                 break;
             }
         }
@@ -65,12 +61,10 @@ public class IgnoreAllStringComparer : StringComparer
     /// <inheritdoc />
     public override int GetHashCode(string obj)
     {
-        unchecked
-        {
+        unchecked {
             int index = 0;
             int hash = 0;
-            while (GetNextSymbol(obj, ref index, out char symbol))
-            {
+            while (GetNextSymbol(obj, ref index, out char symbol)) {
                 hash = (31 * hash) + char.ToUpperInvariant(symbol).GetHashCode();
             }
 
@@ -80,11 +74,9 @@ public class IgnoreAllStringComparer : StringComparer
 
     private static bool GetNextSymbol(string value, ref int startIndex, out char symbol)
     {
-        while (startIndex >= 0 && startIndex < value.Length)
-        {
+        while (startIndex >= 0 && startIndex < value.Length) {
             var current = value[startIndex++];
-            if (char.IsLetterOrDigit(current))
-            {
+            if (char.IsLetterOrDigit(current)) {
                 symbol = char.ToUpperInvariant(current);
                 return true;
             }

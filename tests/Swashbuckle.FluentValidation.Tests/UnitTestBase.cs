@@ -1,8 +1,17 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
+using OpenApi.FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.FluentValidation.AspNetCore;
+using Swashbuckle.FluentValidation.Generation;
 
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class UnitTestBase
 {
@@ -15,13 +24,7 @@ public class UnitTestBase
         configureSwaggerGenerator?.Invoke(swaggerGeneratorOptions);
 
         var schemaGenerator = SchemaGenerator(configureGenerator, configureSerializer);
-        var apiDescriptionGroups = new []{new ApiDescriptionGroup("GroupName", new ApiDescription[]
-        {
-            new ApiDescription()
-            {
-
-            }
-        })};
+        var apiDescriptionGroups = new[] { new ApiDescriptionGroup("GroupName", [new()]) };
 
         var apiDescriptionsProvider = new ApiDescriptionGroupCollectionProvider(
             new ApiDescriptionGroupCollection(apiDescriptionGroups, 1));
@@ -49,8 +52,7 @@ public class UnitTestBase
 
     protected void ConfigureGenerator(SchemaGeneratorOptions swaggerOptions, IValidator[] validators)
     {
-        SchemaGenerationOptions generationOptions = new SchemaGenerationOptions
-        {
+        SchemaGenerationOptions generationOptions = new SchemaGenerationOptions {
             NameResolver = new SystemTextJsonNameResolver()
         };
         generationOptions = generationOptions.FillDefaultValues(null);
@@ -132,7 +134,7 @@ public static class TestExtensions
         var serviceProvider = services.BuildServiceProvider();
 
         SchemaGenerator schemaGenerator = CreateSchemaGenerator(
-            new []{ validator },
+            new[] { validator },
             serviceProvider: serviceProvider,
             configureSerializer: configureSerializer);
 
@@ -151,8 +153,7 @@ public static class TestExtensions
         Action<JsonSerializerOptions>? configureSerializer = null)
     {
         return CreateSchemaGenerator(
-            configureGenerator: options =>
-            {
+            configureGenerator: options => {
                 var generationOptions = serviceProvider.GetService<IOptions<SchemaGenerationOptions>>();
 
                 IValidatorRegistry validatorRegistry = new ValidatorRegistry(validators, generationOptions);

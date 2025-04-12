@@ -2,11 +2,17 @@
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OpenApi.FluentValidation\OpenApi.FluentValidation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsAssemblyName Include="Swashbuckle.AspNetCore.Swagger" />
+    <PackageReference Include="IgnoresAccessChecksToGenerator" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
   </ItemGroup>
 
 </Project>

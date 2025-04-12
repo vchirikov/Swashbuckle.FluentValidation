@@ -1,4 +1,7 @@
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+using FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 public class SetValidatorShouldNotSetParentPropertiesTest : UnitTestBase
 {
@@ -40,14 +43,16 @@ public class SetValidatorShouldNotSetParentPropertiesTest : UnitTestBase
         var modelSchema = schemaRepository.Schemas["Model"];
         var listItemsProperty = modelSchema.Properties[nameof(Model.ListItems)];
         var subModelProperty = modelSchema.Properties[nameof(Model.SubModel)];
-        listItemsProperty.Should().NotBeNull();
-        subModelProperty.Should().NotBeNull();
-        modelSchema.Required.Should().BeEmpty(because: "No required in Model");
+        Assert.NotNull(listItemsProperty);
+        Assert.NotNull(subModelProperty);
+        // because: "No required in Model"
+        Assert.Empty(modelSchema.Required);
 
         var subModelSchema = schemaRepository.Schemas["SubModel"];
         var subModelListItemsProperty = subModelSchema.Properties[nameof(SubModel.ListItems)];
-        subModelListItemsProperty.Should().NotBeNull();
-        subModelSchema.Required.Should().Contain(nameof(SubModel.ListItems), because: "ListItems is required in SubModel");
-        subModelSchema.Required.Should().HaveCount(1);
+        Assert.NotNull(subModelListItemsProperty);
+        // because: "ListItems is required in SubModel"
+        Assert.Contains(nameof(SubModel.ListItems), subModelSchema.Required);
+        Assert.Single(subModelSchema.Required);
     }
 }

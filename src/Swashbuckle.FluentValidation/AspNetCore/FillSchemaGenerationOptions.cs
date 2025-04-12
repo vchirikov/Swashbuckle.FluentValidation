@@ -5,7 +5,7 @@ using OpenApi.FluentValidation;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+namespace Swashbuckle.FluentValidation.AspNetCore;
 
 /// <summary>
 /// Fills <see cref="SchemaGenerationOptions"/> default values on PostConfigure action.

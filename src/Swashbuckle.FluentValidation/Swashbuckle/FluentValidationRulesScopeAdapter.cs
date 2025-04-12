@@ -1,20 +1,22 @@
 ﻿// Copyright (c) MicroElements. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MicroElements.Swashbuckle.FluentValidation;
+namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// Creates service from service provider with desired lifestyle.
 /// </summary>
-public class FluentValidationRulesScopeAdapter : ISchemaFilter
+public class FluentValidationRulesScopeAdapter : ISchemaFilter, IDisposable
 {
     private readonly FluentValidationRules _fluentValidationRules;
+    private bool _isDisposed;
+    private IServiceScope? _serviceScope;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FluentValidationRulesScopeAdapter"/> class.
@@ -24,13 +26,14 @@ public class FluentValidationRulesScopeAdapter : ISchemaFilter
     public FluentValidationRulesScopeAdapter(IServiceProvider serviceProvider, ServiceLifetime serviceLifetime)
     {
         // Hack with the scope mismatch.
-        if (serviceLifetime == ServiceLifetime.Scoped || serviceLifetime == ServiceLifetime.Transient)
-            serviceProvider = serviceProvider.CreateScope().ServiceProvider;
+        if (serviceLifetime is ServiceLifetime.Scoped or ServiceLifetime.Transient) {
+            _serviceScope = serviceProvider.CreateScope();
+            serviceProvider = _serviceScope.ServiceProvider;
+        }
 
         _fluentValidationRules = serviceProvider.GetService<FluentValidationRules>();
 
-        if (_fluentValidationRules == null)
-        {
+        if (_fluentValidationRules == null) {
             var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(typeof(FluentValidationRulesScopeAdapter));
             logger?.LogWarning($"{nameof(FluentValidationRules)} should be registered in services. Hint: Use registration method '{nameof(ServiceCollectionExtensions.AddFluentValidationRulesToSwagger)}'");
         }
@@ -44,14 +47,33 @@ public class FluentValidationRulesScopeAdapter : ISchemaFilter
     {
         _fluentValidationRules.Apply(schema, context);
     }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_isDisposed) {
+            if (disposing) {
+                _serviceScope?.Dispose();
+            }
+            _serviceScope = null;
+            _isDisposed = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }
 
 /// <summary>
 /// Creates service from service provider with desired lifestyle.
 /// </summary>
-public class FluentValidationOperationFilterScopeAdapter : IOperationFilter
+public class FluentValidationOperationFilterScopeAdapter : IOperationFilter, IDisposable
 {
     private readonly FluentValidationOperationFilter _fluentValidationRules;
+    private bool _isDisposed;
+    private IServiceScope? _serviceScope;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FluentValidationOperationFilterScopeAdapter"/> class.
@@ -61,13 +83,14 @@ public class FluentValidationOperationFilterScopeAdapter : IOperationFilter
     public FluentValidationOperationFilterScopeAdapter(IServiceProvider serviceProvider, ServiceLifetime serviceLifetime)
     {
         // Hack with the scope mismatch.
-        if (serviceLifetime == ServiceLifetime.Scoped || serviceLifetime == ServiceLifetime.Transient)
-            serviceProvider = serviceProvider.CreateScope().ServiceProvider;
+        if (serviceLifetime is ServiceLifetime.Scoped or ServiceLifetime.Transient) {
+            _serviceScope = serviceProvider.CreateScope();
+            serviceProvider = _serviceScope.ServiceProvider;
+        }
 
         _fluentValidationRules = serviceProvider.GetService<FluentValidationOperationFilter>();
 
-        if (_fluentValidationRules == null)
-        {
+        if (_fluentValidationRules == null) {
             var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(typeof(FluentValidationRulesScopeAdapter));
             logger?.LogWarning($"{nameof(FluentValidationOperationFilter)} should be registered in services. Hint: Use registration method '{nameof(ServiceCollectionExtensions.AddFluentValidationRulesToSwagger)}'");
         }
@@ -81,15 +104,34 @@ public class FluentValidationOperationFilterScopeAdapter : IOperationFilter
     {
         _fluentValidationRules.Apply(operation, context);
     }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_isDisposed) {
+            if (disposing) {
+                _serviceScope?.Dispose();
+            }
+            _serviceScope = null;
+            _isDisposed = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }
 
 /// <summary>
 /// Creates service from service provider with desired lifestyle.
 /// </summary>
-public class DocumentFilterScopeAdapter<TDocumentFilter> : IDocumentFilter
+public class DocumentFilterScopeAdapter<TDocumentFilter> : IDocumentFilter, IDisposable
     where TDocumentFilter : IDocumentFilter
 {
     private readonly IDocumentFilter _documentFilter;
+    private bool _isDisposed;
+    private IServiceScope? _serviceScope;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DocumentFilterScopeAdapter{TDocumentFilter}"/> class.
@@ -99,13 +141,14 @@ public class DocumentFilterScopeAdapter<TDocumentFilter> : IDocumentFilter
     public DocumentFilterScopeAdapter(IServiceProvider serviceProvider, ServiceLifetime serviceLifetime)
     {
         // Hack with the scope mismatch.
-        if (serviceLifetime == ServiceLifetime.Scoped || serviceLifetime == ServiceLifetime.Transient)
-            serviceProvider = serviceProvider.CreateScope().ServiceProvider;
+        if (serviceLifetime == ServiceLifetime.Scoped || serviceLifetime == ServiceLifetime.Transient) {
+            _serviceScope = serviceProvider.CreateScope();
+            serviceProvider = _serviceScope.ServiceProvider;
+        }
 
         _documentFilter = serviceProvider.GetService<TDocumentFilter>();
 
-        if (_documentFilter == null)
-        {
+        if (_documentFilter == null) {
             var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger(GetType());
             logger?.LogWarning($"{nameof(TDocumentFilter)} should be registered in services. Hint: Use registration method '{nameof(ServiceCollectionExtensions.AddFluentValidationRulesToSwagger)}'");
         }
@@ -118,5 +161,22 @@ public class DocumentFilterScopeAdapter<TDocumentFilter> : IDocumentFilter
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
         _documentFilter.Apply(swaggerDoc, context);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_isDisposed) {
+            if (disposing) {
+                _serviceScope?.Dispose();
+            }
+            _serviceScope = null;
+            _isDisposed = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

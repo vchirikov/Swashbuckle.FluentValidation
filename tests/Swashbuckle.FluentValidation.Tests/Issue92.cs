@@ -1,4 +1,7 @@
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+using FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 /// <summary>
 /// https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/92
@@ -34,15 +37,15 @@ public class Issue92 : UnitTestBase
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var booksProperty = schema.Properties[nameof(CreateBookshelfCommand.Books)];
-        booksProperty.Type.Should().Be("array");
+        Assert.Equal("array", booksProperty.Type);
 
         // should use MinItems for array
-        booksProperty.MinItems.Should().Be(1);
-        booksProperty.MinLength.Should().Be(null);
+        Assert.Equal(1, booksProperty.MinItems);
+        Assert.Null(booksProperty.MinLength);
 
         // items validation should be set
-        booksProperty.Items.Type.Should().Be("string");
-        booksProperty.Items.MinLength.Should().Be(5);
-        booksProperty.Items.MaxLength.Should().Be(250);
+        Assert.Equal("string", booksProperty.Items.Type);
+        Assert.Equal(5, booksProperty.Items.MinLength);
+        Assert.Equal(250, booksProperty.Items.MaxLength);
     }
 }

@@ -6,7 +6,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+namespace Swashbuckle.FluentValidation.AspNetCore;
 
 /// <summary>
 /// DependencyInjection through Reflection.

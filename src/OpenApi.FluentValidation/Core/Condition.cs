@@ -4,7 +4,7 @@
 // ReSharper disable UnusedMember.Global
 #pragma warning disable SA1402
 
-namespace MicroElements.OpenApi.Core;
+namespace OpenApi.Core;
 
 /// <summary>
 /// Provides common condition cases.
@@ -61,7 +61,8 @@ public class Condition<T> : ICondition<T>
     /// <param name="matches">Func that implements matching behaviour.</param>
     public Condition(Func<T, bool> matches)
     {
-        _matches = matches.AssertArgumentNotNull(nameof(matches));
+        ArgumentNullException.ThrowIfNull(matches);
+        _matches = matches;
     }
 
     /// <inheritdoc />

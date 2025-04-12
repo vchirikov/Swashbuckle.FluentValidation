@@ -5,7 +5,7 @@ using FluentValidation.Validators;
 using OpenApi.FluentValidation;
 using Microsoft.OpenApi.Models;
 
-namespace MicroElements.Swashbuckle.FluentValidation;
+namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// FluentValidationRule.

@@ -3,10 +3,10 @@
 
 using System.Text.Json;
 using OpenApi.FluentValidation;
-using MicroElements.Swashbuckle.FluentValidation.Generation;
+using Swashbuckle.FluentValidation.Generation;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+namespace Swashbuckle.FluentValidation.AspNetCore;
 
 /// <summary>
 /// Registration customization.

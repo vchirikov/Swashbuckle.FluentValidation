@@ -3,7 +3,7 @@
 
 using System.Text.Json;
 
-namespace MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+namespace Swashbuckle.FluentValidation.AspNetCore;
 
 /// <summary>
 /// AspNetCore Mvc wrapper that can be used in netstandard.

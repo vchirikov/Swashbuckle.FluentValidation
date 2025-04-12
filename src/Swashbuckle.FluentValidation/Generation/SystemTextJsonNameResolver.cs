@@ -5,9 +5,9 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OpenApi.FluentValidation;
-using MicroElements.Swashbuckle.FluentValidation.AspNetCore;
+using Swashbuckle.FluentValidation.AspNetCore;
 
-namespace MicroElements.Swashbuckle.FluentValidation.Generation;
+namespace Swashbuckle.FluentValidation.Generation;
 
 /// <summary>
 /// Resolves name according System.Text.Json <see cref="JsonPropertyNameAttribute"/> or <see cref="JsonSerializerOptions.PropertyNamingPolicy"/>.

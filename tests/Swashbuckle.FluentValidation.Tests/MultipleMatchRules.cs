@@ -1,4 +1,7 @@
-namespace MicroElements.Swashbuckle.FluentValidation.Tests;
+using FluentValidation;
+using Swashbuckle.AspNetCore.SwaggerGen;
+
+namespace Swashbuckle.FluentValidation.Tests;
 
 /// <summary>
 /// https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/70
@@ -36,7 +39,7 @@ public class MultipleMatchRules : UnitTestBase
         void ShouldBeFailed(PhoneEntity entity)
         {
             var validationResult = new PhoneEntity.Validator().Validate(entity);
-            validationResult.IsValid.Should().BeFalse();
+            Assert.False(validationResult.IsValid);
         }
 
         // 10 digits, starts with 3
@@ -54,6 +57,6 @@ public class MultipleMatchRules : UnitTestBase
 
         var schema = new SchemaRepository().GenerateSchemaForValidator(new PhoneEntity.Validator());
         var numberProp = schema.Properties[nameof(PhoneEntity.MobilePhoneNumber)];
-        numberProp.Type.Should().Be("string");
+        Assert.Equal("string", numberProp.Type);
     }
 }
