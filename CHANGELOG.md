@@ -1,6 +1,6 @@
-# Changes in 7.0.0
+# Changes in 7.0.x
 - Update libraries to the latest version.
-- Migrate to net8.0
+- Migrate to net9.0
 - Remove NSwag support
 - Remove WebApi support
 - Remove usage of FluentAssertions
