@@ -42,11 +42,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: git checkout / on non-'workflow_call'
-        uses: https://github.com/actions/checkout@v4
+        uses: actions/checkout@v4
         with:
           clean: false
           ref: ${{ github.event.pull_request.head.sha }}
-          lfs: true
+          lfs: false
           fetch-depth: 0
 
       - name: Forward env variables & checkout fixes
