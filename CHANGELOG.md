@@ -1,3 +1,6 @@
+# Changes in 6.2.0
+- Update libraries to the latest version.
+
 # Changes in 6.1.0
 - Added support for .NET 8 and .NET 9 to MicroElements.Swashbuckle.FluentValidation.AspNetCore
 - Dropped support for .NET 6.0 

@@ -1,0 +1,233 @@
+[*.cs]
+
+# [.NET formatting options - .NET | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/dotnet-formatting-options?view=vs-2022)
+dotnet_style_namespace_match_folder = false
+dotnet_sort_system_directives_first = true
+dotnet_style_prefer_conditional_expression_over_return = false
+csharp_new_line_before_open_brace = accessors, events, indexers, local_functions, methods, properties, types
+csharp_indent_case_contents_when_block = false
+csharp_style_namespace_declarations = file_scoped
+csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_before_members_in_anonymous_types = false
+csharp_new_line_between_query_expression_clauses = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_style_expression_bodied_methods = when_on_single_line
+csharp_style_expression_bodied_constructors = when_on_single_line
+csharp_prefer_braces = when_multiline
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true
+csharp_style_expression_bodied_local_functions = when_on_single_line
+
+#########################
+# .NET Naming conventions
+# https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-naming-conventions
+#########################
+# The basics
+dotnet_naming_style.camel_case_style.capitalization = camel_case
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# Underscore camel style
+dotnet_naming_style.camel_case_and_prefix_with_underscore_style.required_prefix = _
+dotnet_naming_style.camel_case_and_prefix_with_underscore_style.capitalization = camel_case
+
+# Pascal I prefix
+dotnet_naming_style.pascal_case_and_prefix_with_i_style.required_prefix = I
+dotnet_naming_style.pascal_case_and_prefix_with_i_style.capitalization = pascal_case
+
+# Pascal T prefix
+dotnet_naming_style.pascal_case_and_prefix_with_t_style.required_prefix = T
+dotnet_naming_style.pascal_case_and_prefix_with_t_style.capitalization = pascal_case
+
+## Symbols
+
+# Interfaces
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_symbols.interface_symbols.applicable_accessibilities = *
+
+# Type parameters
+dotnet_naming_symbols.type_parameter_symbols.applicable_kinds = type_parameter
+dotnet_naming_symbols.type_parameter_symbols.applicable_accessibilities = *
+
+# Pascal most of the things
+dotnet_naming_symbols.pascal_symbols.applicable_kinds = class, struct, enum, property, method, event, namespace, delegate, local_function
+dotnet_naming_symbols.pascal_symbols.applicable_accessibilities = *
+
+# Parameters, locals
+dotnet_naming_symbols.locals_and_parameters_symbols.applicable_kinds = parameter, local
+dotnet_naming_symbols.locals_and_parameters_symbols.applicable_accessibilities = *
+
+# Constants
+dotnet_naming_symbols.constant_symbols.applicable_kinds = field
+dotnet_naming_symbols.constant_symbols.required_modifiers = const
+dotnet_naming_symbols.constant_symbols.applicable_accessibilities = *
+
+# Public fields
+dotnet_naming_symbols.public_field_symbols.applicable_kinds = field
+dotnet_naming_symbols.public_field_symbols.applicable_accessibilities = public, friend, protected, protected_friend, private_protected
+
+# Private fields
+dotnet_naming_symbols.private_field_symbols.applicable_kinds = field
+dotnet_naming_symbols.private_field_symbols.applicable_accessibilities = private, internal, protected_internal
+
+## Naming Rules
+
+# Interfaces
+dotnet_naming_rule.interfaces_must_be_pascal_cased_and_prefixed_with_i.symbols = interface_symbols
+dotnet_naming_rule.interfaces_must_be_pascal_cased_and_prefixed_with_i.style = pascal_case_and_prefix_with_I_style
+dotnet_naming_rule.interfaces_must_be_pascal_cased_and_prefixed_with_i.severity = warning
+
+# Type parameters
+dotnet_naming_rule.type_parameters_must_be_pascal_cased_and_prefixed_with_t.symbols = type_parameter_symbols
+dotnet_naming_rule.type_parameters_must_be_pascal_cased_and_prefixed_with_t.style = pascal_case_and_prefix_with_T_style
+dotnet_naming_rule.type_parameters_must_be_pascal_cased_and_prefixed_with_t.severity = warning
+
+# Pascal most of the things
+dotnet_naming_rule.externally_visible_members_must_be_pascal_cased.symbols = pascal_symbols
+dotnet_naming_rule.externally_visible_members_must_be_pascal_cased.style = pascal_case_style
+dotnet_naming_rule.externally_visible_members_must_be_pascal_cased.severity = warning
+
+# Parameters, locals
+dotnet_naming_rule.parameters_must_be_camel_cased.symbols = locals_and_parameters_symbols
+dotnet_naming_rule.parameters_must_be_camel_cased.style = camel_case_style
+dotnet_naming_rule.parameters_must_be_camel_cased.severity = warning
+
+# Constants
+dotnet_naming_rule.constants_must_be_pascal_cased.symbols = constant_symbols
+dotnet_naming_rule.constants_must_be_pascal_cased.style = pascal_case_style
+dotnet_naming_rule.constants_must_be_pascal_cased.severity = warning
+
+# Public fields
+dotnet_naming_rule.public_instance_fields_must_be_camel_cased_and_prefixed_with_underscore.symbols = public_field_symbols
+dotnet_naming_rule.public_instance_fields_must_be_camel_cased_and_prefixed_with_underscore.style = pascal_case_style
+dotnet_naming_rule.public_instance_fields_must_be_camel_cased_and_prefixed_with_underscore.severity = warning
+
+# Private fields
+dotnet_naming_rule.private_instance_fields_must_be_camel_cased_and_prefixed_with_underscore.symbols = private_field_symbols
+dotnet_naming_rule.private_instance_fields_must_be_camel_cased_and_prefixed_with_underscore.style = camel_case_and_prefix_with_underscore_style
+dotnet_naming_rule.private_instance_fields_must_be_camel_cased_and_prefixed_with_underscore.severity = warning
+
+
+# [ReSharper/Rider properties](https://www.jetbrains.com/help/rider/EditorConfig_Properties.html)
+# Arrangement of method signatures - Prefer to wrap before ')' in declaration (C#)
+csharp_wrap_before_declaration_rpar = true
+# Keep existing arrangement of embedded blocks
+keep_existing_arrangement = true
+
+# Roslynator
+roslynator_trailing_comma_style = include
+
+# resharper
+resharper_parameter_type_can_be_enumerable_global_highlighting = none
+resharper_return_type_can_be_enumerable_local_highlighting = none
+resharper_invert_if_highlighting = none
+resharper_class_never_instantiated_global_highlighting = none
+resharper_redundant_argument_default_value_highlighting = none
+resharper_convert_if_statement_to_switch_statement_highlighting = none
+resharper_template_is_not_compile_time_constant_problem_highlighting = hint
+resharper_convert_type_check_pattern_to_null_check_highlighting = hint
+resharper_class_never_instantiated_global_highlighting = none
+resharper_class_never_instantiated_local_highlighting = none
+resharper_redundant_record_class_keyword_highlighting = none
+resharper_redundant_type_arguments_of_method_highlighting = none
+resharper_not_accessed_positional_property_local_highlighting = none
+resharper_not_accessed_positional_property_global_highlighting = none
+resharper_unused_member_global_highlighting = none
+resharper_unused_auto_property_accessor_global_highlighting = none
+resharper_unused_variable_highlighting = none
+resharper_unused_type_global_highlighting = none
+resharper_unused_parameter_in_partial_method_highlighting = none
+resharper_arrange_default_value_when_type_not_evident_highlighting = none
+resharper_property_can_be_made_init_only_local_highlighting = hint
+resharper_collection_never_updated_local_highlighting = hint
+resharper_use_collection_count_property_highlighting = error
+resharper_entity_framework_model_validation_unlimited_string_length_highlighting = none
+resharper_property_can_be_made_init_only_local_highlighting = none
+resharper_property_can_be_made_init_only_global_highlighting = none
+resharper_member_can_be_protected_global_highlighting = none
+resharper_redundant_lambda_parameter_type_highlighting = none
+resharper_csharp_trailing_comma_in_singleline_lists = false
+resharper_trailing_comma_in_multiline_lists = true
+resharper_csharp_trailing_comma_in_multiline_lists = true
+
+
+# MA0003 - Add parameter name to improve readability - https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0003.md
+MA0003.minimum_method_arguments = 2 # Only consider methods with 1 or more parameters
+
+# Analyzers
+dotnet_diagnostic.CA2000.severity = error # CA2000: Dispose objects before losing scope
+dotnet_diagnostic.CA2213.severity = error # CA2213: Disposable fields should be disposed
+dotnet_diagnostic.CA2008.severity = warning # CA2008: Do not create tasks without passing a TaskScheduler
+dotnet_diagnostic.IDE0008.severity = silent # IDE0008: Use explicit type
+dotnet_diagnostic.IDE0058.severity = none # IDE0058: Expression value is never used
+dotnet_diagnostic.IDE0046.severity = none # IDE0046: Use conditional expression for return / should be a dev decision
+dotnet_diagnostic.IDE0032.severity = suggestion # IDE0032: Use auto-implemented property / should be a dev decision
+dotnet_diagnostic.IDE0021.severity = suggestion # IDE0021: Use expression body for constructors
+dotnet_diagnostic.IDE0022.severity = suggestion # IDE0022: Use expression body for methods
+dotnet_diagnostic.IDE0290.severity = suggestion # IDE0290: Use primary constructor
+dotnet_diagnostic.IDE0040.severity = suggestion # IDE0040: Add accessibility modifiers
+dotnet_diagnostic.IDE0045.severity = suggestion # IDE0045: Use conditional expression for assignment
+dotnet_diagnostic.rcs1139.severity = none # RCS1139: Add summary element to documentation comment.
+dotnet_diagnostic.rcs1021.severity = none # RCS1021: Simplify lambda expression.
+dotnet_code_quality_unused_parameters = non_public # IDE0060: Remove unused parameter
+dotnet_diagnostic.rcs1037.severity = silent # RCS1037: Remove trailing white-space.
+dotnet_diagnostic.ide1006.severity = none # IDE1006: Naming rule violation
+dotnet_diagnostic.ca1014.severity = none # CA1014: Mark assemblies with CLSCompliant
+dotnet_diagnostic.ca1716.severity = none # CA1716: Rename namespace Shared so that it no longer conflicts with the reserved language keyword 'Shared'
+dotnet_diagnostic.ca5394.severity = none # CA5394: Random is an insecure random number generator. Use cryptographically secure random number generators when randomness is required for security.
+dotnet_diagnostic.ca1303.severity = none # CA1303: Method passes a literal string as parameter 'value' of a call
+dotnet_diagnostic.ca1416.severity = none # CA1416: is only supported on: 'windows' 5.1.2600 and later.
+dotnet_diagnostic.ca2201.severity = none # CA2201: Exception type System.Exception is not sufficiently specific
+dotnet_diagnostic.CA1051.severity = none # CA1051: Do not declare visible instance fields
+dotnet_diagnostic.CA1040.severity = none # CA1040: Avoid empty interfaces
+dotnet_diagnostic.CA1034.severity = none # CA1034: Do not nest type
+dotnet_diagnostic.CA1308.severity = none # CA1308: Normalize strings to uppercase
+dotnet_diagnostic.CA1062.severity = none # CA1062: In externally visible method XXX validate parameter against null
+dotnet_diagnostic.CA1822.severity = none # CA1822: Member XXX does not access instance data and can be marked as static
+dotnet_diagnostic.MA0038.severity = none # Make method static (deprecated, use CA1822 instead)
+dotnet_diagnostic.CA1002.severity = none # CA1002: Change 'List<XXX>' in XXX to use 'Collection<T>', 'ReadOnlyCollection<T>' or 'KeyedCollection<K,V>'
+dotnet_diagnostic.CA1848.severity = none # CA1848: For improved performance, use the LoggerMessage delegates instead of calling 'LoggerExtensions.LogInformation'
+dotnet_diagnostic.ma0051.severity = none # MA0051: Method is too long
+dotnet_diagnostic.ma0016.severity = none # MA0016: Prefer using collection abstraction instead of implementation
+dotnet_diagnostic.ma0011.severity = none # MA0011: Use an overload of 'Parse' that has a 'System.IFormatProvider' parameter / copy of CA1305
+dotnet_diagnostic.ddi001.severity = none # DDI001: The AddServices extension method must be invoked in order for discovered services to be properly registered.
+dotnet_diagnostic.RCS1260.severity = suggestion # RCS1260: Add/remove trailing comma
+dotnet_diagnostic.VSTHRD003.severity = none # VSTHRD003: Avoid awaiting foreign Tasks
+dotnet_diagnostic.CA1031.severity = silent # CA1031: Do not catch general exception types
+dotnet_diagnostic.CA1056.severity = none # CA1056: URI properties should not be strings
+dotnet_diagnostic.CA1054.severity = none # CA1054: URI-like parameters should not be strings
+dotnet_diagnostic.CA1724.severity = none # CA1724: The type name 'xxx' conflicts in whole or in part with the namespace name
+dotnet_diagnostic.MA0047.severity = none # MA0047: Declare type 'xxx' in a namespace // duplicate of CA1050
+dotnet_diagnostic.ca1812.severity = none # CA1812: xxx is an internal class that is apparently never instantiated. If so, remove the code from the assembly. (it doesn't catch DI instatination)
+dotnet_diagnostic.CS1587.severity = none # CS1587: XML comment is not placed on a valid language element // used to use '///' for code linking inside methods
+dotnet_diagnostic.CA1711.severity = none # CA1711: Identifiers should not have incorrect suffix
+dotnet_diagnostic.CA2227.severity = none # CA2227: Collection properties should be read only
+dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
+dotnet_code_quality.CA1305.excluded_symbol_names = Uuid7 # CA1305: Specify IFormatProvider
+
+# IDE0008: Use explicit type
+dotnet_diagnostic.IDE0008.severity = silent
+
+[*Configuration.cs]
+dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
+
+[artifacts/**/*.cs]
+generated_code = true
+
+# disable all analyzers in generated code
+[src/*/Data/Migrations/*.cs]
+generated_code = true
+
+# disable all analyzers in serialization models
+[src/*/Data/Endpoints/*.cs]
+# generated_code = true also require explicit NRT enabling in file, let's use severity here
+# [doesn't work with warnings](https://github.com/dotnet/roslyn/issues/63107)
+dotnet_analyzer_diagnostic.severity = none
+dotnet_diagnostic.CA1861.severity = none # CA1861: Avoid constant arrays as arguments
+dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
+
+
+# Temporal workflows
+[*.Workflow.cs]
+dotnet_diagnostic.CA1024.severity = none # use getters for queries, they cannot be properties
+dotnet_diagnostic.CA5394.severity = none # workflow randomness (Workflow.Random) is intentionally deterministic

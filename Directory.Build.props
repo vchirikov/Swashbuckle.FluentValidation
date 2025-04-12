@@ -1,0 +1,97 @@
+<Project ToolsVersion="latest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>preview-all</AnalysisLevel>
+    <RepoName>Swashbuckle.FluentValidation</RepoName>
+    <UserSecretsId>$(RepoName)</UserSecretsId>
+    <Authors>Vladimir Chirikov, Alexey Petryashev</Authors>
+    <Description>Personal fork of MicroElements.Swashbuckle.FluentValidation</Description>
+    <RepositoryUrl>https://github.com/vchirikov/Swashbuckle.FluentValidation</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <SolutionDir Condition="$(SolutionDir) == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+    <NoLogo>true</NoLogo>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <!-- NOTE: ArtifactsPath from artifacts-path cli option might not contain slash at the end, thus don't use slash here too -->
+    <ArtifactsPath>$(SolutionDir)artifacts</ArtifactsPath>
+    <PackageOutputPath>$(ArtifactsPath)\nupkg</PackageOutputPath>
+    <NuGetAudit>false</NuGetAudit>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Features>strict</Features>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AddServiceAttribute>false</AddServiceAttribute>
+    <!-- NU5105: The package version uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients -->
+    <!-- NU5048: The 'PackageIconUrl'/'iconUrl' element is deprecated -->
+    <!-- MA0048: File name must match type name -->
+    <NoWarn>$(NoWarn);MA0048;NU5105;NU5048;</NoWarn>
+    <GenerateFullPaths Condition="'$(TERM_PROGRAM)' == 'vscode'">true</GenerateFullPaths>
+    <GitVersionBaseDirectory>$(RepoRoot)</GitVersionBaseDirectory>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- automatically override a transitive package version even without an explicit top-level PackageReference -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- prev. used by source link package, now is used only for container integration  -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PrivateRepositoryUrl>$(RepositoryUrl)</PrivateRepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <SourceRevisionId>$(GitCommitId)</SourceRevisionId>
+    <!--
+      prevents nbgv to read .git folder to get version info.
+      disabled because every commit change version height which causes rebuilding all projects on each commit
+      it also helps to get faster builds
+    -->
+    <NBGV_GitEngine>Disabled</NBGV_GitEngine>
+  </PropertyGroup>
+
+  <PropertyGroup Label="OpenAPI Analyzers" Condition="'$(UsingMicrosoftNETSdkWeb)' == 'True'">
+    <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <NBGV_GitEngine>Managed</NBGV_GitEngine>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ContinuousIntegrationBuild)' == 'true' AND '$(Configuration)' != 'Debug' AND '$(DesignTimeBuild)' != 'true' AND '$(BuildingForLiveUnitTesting)' != 'true'">
+    <Deterministic>true</Deterministic>
+    <Features>strict;pdb-path-determinism</Features>
+    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+    <DeterministicSourcePaths Condition="'$(IsTestProject)' == 'true'">false</DeterministicSourcePaths>
+    <PathMap>'$(RepoRoot)'=/_/</PathMap>
+    <!--
+      if you need SourceLink - use props: https://github.com/dotnet/sourcelink/issues/159 and your older exp with it,
+      but for now I think including all source files into pdb is way to go, because it's much easier and has better DX
+    -->
+    <EmbedAllSources>true</EmbedAllSources>
+    <!-- embed source-generated files too -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(DeterministicSourcePaths)' =='true'">
+    <!-- even without SourceLink looks like we [need to define SourceRoot](https://github.com/dotnet/roslyn/issues/37379) -->
+    <SourceRoot Include="$(SolutionDir)" RepositoryUrl="$(RepositoryUrl)" SourceControl="git" RevisionId="$(GitCommitId)"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(IsPackable)' == 'true' AND '$(DeterministicSourcePaths)' == 'true' ">
+    <IncludeSymbols>true</IncludeSymbols>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageIconUrl>$(RepositoryUrl)/media/branch/master/icon.png</PackageIconUrl>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(IsPackable)' == 'true' AND '$(DeterministicSourcePaths)' == 'true' ">
+    <None Include="$(RepoRoot)icon.png" Pack="true" PackagePath="\$(PackageIcon)" Visible="false" />
+  </ItemGroup>
+</Project>

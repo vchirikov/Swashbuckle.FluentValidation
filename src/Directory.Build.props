@@ -1,20 +1,43 @@
-<Project>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
-  </ItemGroup>
-
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="latest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
   <PropertyGroup>
-    <DebugType>embedded</DebugType>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <!-- do not use ArtifactsPivots, for multi-platform use `artifacts-path` cli arg  -->
+    <OutputPath>$(ArtifactsPath)\bin\$(MSBuildProjectName)\</OutputPath>
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <!-- Include the PDB and xmldoc in the built .nupkg -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb;.xml</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <!-- CS1573: Parameter 'parameter' has no matching param tag in the XML comment for 'parameter' (but other parameters do) -->
+    <!-- CS1591: Missing XML comment for publicly visible type or member -->
+    <!-- CA1303: Method passes a literal string as parameter 'value' of a call -->
+    <NoWarn>$(NoWarn);CS1573;CS1591;CA1303;</NoWarn>
+    <IncludeSymbols>false</IncludeSymbols>
+    <!-- Swashbuckle uses xmldoc to fill openapi schema -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+    <InternalsVisibleTo Include="$(AssemblyName).Tests" />
 
-  <Import Project="stylecop.props"/>
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
 
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)\GlobalSuppressions.cs" Link="_shared\GlobalSuppressions.cs" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Concurrent" />
+    <Using Include="System.Collections.Immutable" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Globalization" />
+    <Using Include="System.FormattableString" Static="True" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Runtime.InteropServices" />
+    <Using Include="System.Runtime.Serialization" />
+    <Using Include="System.Threading" />
   </ItemGroup>
 
 </Project>

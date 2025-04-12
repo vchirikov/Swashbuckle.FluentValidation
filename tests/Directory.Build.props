@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="latest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
+  <PropertyGroup>
+    <!-- we don't use ArtifactsPivots and Configuration in the path  -->
+    <OutputPath>$(ArtifactsPath)\tests\$(MSBuildProjectName)\</OutputPath>
+    <!-- after upgrade to xunit v3, where tests are executable projects -->
+    <!-- <OutputType>Exe</OutputType> -->
+    <!-- CA1034 - Do not nest type -->
+    <!-- CA1822	- Member can be marked as static -->
+    <NoWarn>CA1034;CA1822;</NoWarn>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <!-- Copy all references to output folder (important for coverage tools) -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- Also we will copy all pdb from nupkg, it will help with debugging -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <AllowedReferenceRelatedFileExtensions>$(AllowedReferenceRelatedFileExtensions);.pdb</AllowedReferenceRelatedFileExtensions>
+    <!-- https://github.com/pengweiqhca/Xunit.DependencyInjection?tab=readme-ov-file#parallel -->
+    <ParallelizationMode>Force</ParallelizationMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3"/>
+    <PackageReference Include="xunit.analyzers" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="All" IncludeAssets="runtime; build; native; contentfiles; analyzers"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+
+    <!-- Testing-related global usings -->
+    <Using Include="Xunit"/>
+
+    <None Include="$(MSBuildThisFileDirectory)template.xunit.runner.json" CopyToOutputDirectory="PreserveNewest" Link="$(AssemblyName).xunit.runner.json"/>
+  </ItemGroup>
+
+</Project>
