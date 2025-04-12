@@ -88,10 +88,12 @@
   <PropertyGroup Condition=" '$(IsPackable)' == 'true' AND '$(DeterministicSourcePaths)' == 'true' ">
     <IncludeSymbols>true</IncludeSymbols>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIconUrl>$(RepositoryUrl)/media/branch/master/icon.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(IsPackable)' == 'true' AND '$(DeterministicSourcePaths)' == 'true' ">
     <None Include="$(RepoRoot)icon.png" Pack="true" PackagePath="\$(PackageIcon)" Visible="false" />
+    <None Include="$(RepoRoot)README.md" Pack="true" PackagePath="\$(PackageReadmeFile)" Visible="false" />
   </ItemGroup>
 </Project>
