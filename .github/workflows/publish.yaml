@@ -68,7 +68,7 @@ jobs:
 
       - name: Generate version
         id: nbgv
-        uses: https://github.com/actions/github-script@v7
+        uses: actions/github-script@v7
         with:
           # https://github.com/actions/toolkit/tree/main/packages/exec#basic
           script: |-
