@@ -14,7 +14,6 @@
     <!-- CA1303: Method passes a literal string as parameter 'value' of a call -->
     <NoWarn>$(NoWarn);CS1573;CS1591;CA1303;</NoWarn>
     <IncludeSymbols>false</IncludeSymbols>
-    <!-- Swashbuckle uses xmldoc to fill openapi schema -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>

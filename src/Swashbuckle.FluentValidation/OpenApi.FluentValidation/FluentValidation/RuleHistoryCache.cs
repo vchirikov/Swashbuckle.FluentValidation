@@ -52,7 +52,7 @@ internal static class RuleHistoryCache
 
     internal class PropertyValidatorComparer : IEqualityComparer<IPropertyValidator>
     {
-        public static readonly PropertyValidatorComparer Instance = new PropertyValidatorComparer();
+        public static readonly PropertyValidatorComparer Instance = new();
 
         /// <inheritdoc />
         public bool Equals(IPropertyValidator? x, IPropertyValidator? y)

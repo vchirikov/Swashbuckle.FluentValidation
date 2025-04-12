@@ -80,10 +80,8 @@ public class FluentValidationRules : ISchemaFilter
         var allSchemas = new List<OpenApiSchema>();
         ProcessAllSchemas(schema, allSchemas);
 
-        foreach (var validator in validators)
-        {
-            foreach (var oneOfSchemas in allSchemas)
-            {
+        foreach (var validator in validators) {
+            foreach (var oneOfSchemas in allSchemas) {
                 var validatorContext = new ValidatorContext(typeContext, validator);
                 var schemaContext = new SchemaGenerationContext(
                     schemaRepository: context.SchemaRepository,
@@ -95,12 +93,10 @@ public class FluentValidationRules : ISchemaFilter
 
                 ApplyRulesToSchema(schemaContext, validator);
 
-                try
-                {
+                try {
                     AddRulesFromIncludedValidators(schemaContext, validatorContext);
                 }
-                catch (Exception e)
-                {
+                catch (Exception e) {
                     _logger.LogWarning(0, e, "Applying IncludeRules for type '{ModelType}' failed", context.Type);
                 }
             }
@@ -131,12 +127,9 @@ public class FluentValidationRules : ISchemaFilter
 
         var collectionsOfSchemas = new IList<OpenApiSchema>[] { schema.AllOf, schema.OneOf, schema.AnyOf };
 
-        foreach (var collectionOfSchemas in collectionsOfSchemas)
-        {
-            foreach (var embededSchema in collectionOfSchemas)
-            {
-                if (!embededSchema.Properties.Any())
-                {
+        foreach (var collectionOfSchemas in collectionsOfSchemas) {
+            foreach (var embededSchema in collectionOfSchemas) {
+                if (!embededSchema.Properties.Any()) {
                     continue;
                 }
 

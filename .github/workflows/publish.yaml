@@ -96,9 +96,16 @@ jobs:
               core.setFailed(error.message);
             }
 
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+
       - name: build-and-publish
         run: |-
           dotnet restore --runtime linux-x64 -p:Configuration=Release -t:GenerateAssemblyNBGVVersionInfo
           dotnet test
           dotnet pack -c Release
+          dotnet msbuild -getproperty:AssemblyName,DeterministicSourcePaths,CI,IsPackable,PackageIcon,PackageReadmeFile,ContinuousIntegrationBuild,Configuration,DesignTimeBuild,BuildingForLiveUnitTesting,SourceRevisionId,GitCommitId src/Swashbuckle.FluentValidation/Swashbuckle.FluentValidation.csproj | jq
           dotnet nuget push artifacts/nupkg/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json --force-english-output --timeout 20 --skip-duplicate

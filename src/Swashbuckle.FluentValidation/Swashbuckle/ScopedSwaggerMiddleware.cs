@@ -41,7 +41,7 @@ public static class SwaggerBuilderExtensions
     /// </summary>
     public static IApplicationBuilder UseScopedSwagger(this IApplicationBuilder app, Action<SwaggerOptions> setupAction = null)
     {
-        SwaggerOptions swaggerOptions = new SwaggerOptions();
+        SwaggerOptions swaggerOptions = new();
         setupAction?.Invoke(swaggerOptions);
         return app.UseMiddleware<ScopedSwaggerMiddleware>(swaggerOptions);
     }

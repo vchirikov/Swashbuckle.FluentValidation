@@ -4,13 +4,10 @@
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\OpenApi.FluentValidation\OpenApi.FluentValidation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
