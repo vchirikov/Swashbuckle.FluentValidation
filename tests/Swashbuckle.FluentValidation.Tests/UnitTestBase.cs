@@ -16,7 +16,7 @@ namespace Swashbuckle.FluentValidation.Tests;
 public class UnitTestBase
 {
     public SwaggerGenerator SwaggerGenerator(
-        Action<SwaggerGeneratorOptions> configureSwaggerGenerator = null,
+        Action<SwaggerGeneratorOptions>? configureSwaggerGenerator = null,
         Action<SchemaGeneratorOptions>? configureGenerator = null,
         Action<JsonSerializerOptions>? configureSerializer = null)
     {
@@ -52,7 +52,7 @@ public class UnitTestBase
 
     protected void ConfigureGenerator(SchemaGeneratorOptions swaggerOptions, IValidator[] validators)
     {
-        SchemaGenerationOptions generationOptions = new SchemaGenerationOptions {
+        SchemaGenerationOptions generationOptions = new() {
             NameResolver = new SystemTextJsonNameResolver()
         };
         generationOptions = generationOptions.FillDefaultValues(null);
@@ -82,7 +82,7 @@ public class SchemaBuilder<T>
 
     public SchemaRepository SchemaRepository { get; } = new SchemaRepository();
 
-    private readonly SchemaGenerationOptions _schemaGenerationOptions = new SchemaGenerationOptions();
+    private readonly SchemaGenerationOptions _schemaGenerationOptions = new();
 
     public SchemaBuilder()
     {
@@ -158,7 +158,7 @@ public static class TestExtensions
 
                 IValidatorRegistry validatorRegistry = new ValidatorRegistry(validators, generationOptions);
 
-                FluentValidationRules fluentValidationRules = new FluentValidationRules(
+                FluentValidationRules fluentValidationRules = new(
                     loggerFactory: null,
                     serviceProvider: serviceProvider,
                     validatorRegistry: validatorRegistry,

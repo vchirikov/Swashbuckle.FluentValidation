@@ -90,26 +90,21 @@ public partial class SchemaGenerationTests : UnitTestBase
 
     public class Sample
     {
-        public string PropertyWithNoRules { get; set; }
-
-        public string NotNull { get; set; }
-        public string NotEmpty { get; set; }
-        public string EmailAddressRegex { get; set; }
-        public string EmailAddress { get; set; }
-        public string RegexField { get; set; }
-
+        public string PropertyWithNoRules { get; set; } = null!;
+        public string NotNull { get; set; } = null!;
+        public string NotEmpty { get; set; } = null!;
+        public string EmailAddressRegex { get; set; } = null!;
+        public string EmailAddress { get; set; } = null!;
+        public string RegexField { get; set; } = null!;
         public int ValueInRange { get; set; }
         public int ValueInRangeExclusive { get; set; }
-
         public float ValueInRangeFloat { get; set; }
         public double ValueInRangeDouble { get; set; }
         public decimal DecimalValue { get; set; }
-
-        public string NotEmptyWithMaxLength { get; set; }
-
-        // ReSharper disable once InconsistentNaming
+        public string NotEmptyWithMaxLength { get; set; } = null!;
+        // ReSharper disable once InconsistentNaming = null!;
         // https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/10
-        public string javaStyleProperty { get; set; }
+        public string javaStyleProperty { get; set; } = null!;
     }
 
     public class SampleValidator : AbstractValidator<Sample>
@@ -189,10 +184,10 @@ public partial class SchemaGenerationTests : UnitTestBase
     public class Customer
     {
         public int Id { get; set; }
-        public string Surname { get; set; }
-        public string Forename { get; set; }
+        public string Surname { get; set; } = null!;
+        public string Forename { get; set; } = null!;
         public decimal Discount { get; set; }
-        public string Address { get; set; }
+        public string Address { get; set; } = null!;
     }
     public class CustomerValidator : AbstractValidator<Customer>
     {
@@ -273,7 +268,7 @@ public partial class SchemaGenerationTests : UnitTestBase
     [InlineData(null, 1, 1)]
     public static void TestMaxOverride(int? first, int? second, int expected)
     {
-        OpenApiSchema schemaProperty = new OpenApiSchema();
+        OpenApiSchema schemaProperty = new();
 
         schemaProperty.SetNewMax(p => p.MaxLength, first);
         schemaProperty.SetNewMax(p => p.MaxLength, second);
@@ -288,7 +283,7 @@ public partial class SchemaGenerationTests : UnitTestBase
     [InlineData(null, 1, 1)]
     public static void TestMinOverride(int? first, int? second, int expected)
     {
-        OpenApiSchema schemaProperty = new OpenApiSchema();
+        OpenApiSchema schemaProperty = new();
 
         schemaProperty.SetNewMin(p => p.MinLength, first);
         schemaProperty.SetNewMin(p => p.MinLength, second);
@@ -322,7 +317,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var emailsProp = schema.Properties[nameof(Person.Emails)];
 
-        Assert.Equal(null, emailsProp.Format);
+        Assert.Null(emailsProp.Format);
 
         Assert.Equal("string", emailsProp.Items.Type);
         Assert.Equal("email", emailsProp.Items.Format);

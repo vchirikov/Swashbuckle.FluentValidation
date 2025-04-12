@@ -156,7 +156,7 @@ public class FluentValidationDocumentFilter : IDocumentFilter
                 continue;
 
             var typeContext = new TypeContext(item.ModelType, _schemaGenerationOptions);
-            ValidatorContext validatorContext = new ValidatorContext(typeContext, validator);
+            ValidatorContext validatorContext = new(typeContext, validator);
 
             var schemaContext = new SchemaGenerationContext(
                 schemaRepository: context.SchemaRepository,

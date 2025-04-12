@@ -31,8 +31,8 @@ public static class FluentValidationSchemaBuilder
         IReadOnlyList<IFluentValidationRule<TSchema>> fluentValidationRules = schemaGenerationContext.Rules;
         schemaPropertyNames ??= schemaGenerationContext.Properties;
 
-        TypeContext typeContext = new TypeContext(schemaType, schemaGenerationOptions);
-        ValidatorContext validatorContext = new ValidatorContext(typeContext, validator);
+        TypeContext typeContext = new(schemaType, schemaGenerationOptions);
+        ValidatorContext validatorContext = new(typeContext, validator);
 
         var lazyLog = new LazyLog(logger, l => l.LogDebug("Applying FluentValidation rules to swagger schema '{SchemaTypeName}'", schemaTypeName));
 
