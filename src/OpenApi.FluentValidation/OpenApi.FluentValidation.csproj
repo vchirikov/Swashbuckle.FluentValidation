@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Swashbuckle.FluentValidation" />
     <InternalsVisibleTo Include="Swashbuckle.FluentValidation.Tests" />

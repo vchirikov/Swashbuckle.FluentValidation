@@ -1,6 +1,6 @@
 ﻿# Swashbuckle.FluentValidation
 
-Adds FluentValidation rules -> OpenApi schema
+Adds FluentValidation rules -> OpenApi schema.
 
 
 ## Credits

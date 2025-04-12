@@ -1,9 +1,12 @@
 # Changes in 7.0.0
 - Update libraries to the latest version.
+- Migrate to net8.0
 - Remove NSwag support
+- Remove WebApi support
 - Remove usage of FluentAssertions
 - Remove samples
 - Prevent leak of `IServiceScope` inside `FluentValidationRulesScopeAdapter` / `FluentValidationOperationFilterScopeAdapter` / `DocumentFilterScopeAdapter` "hacks"
+- use NBGV for versioning
 
 # Changes in 6.1.0
 - Added support for .NET 8 and .NET 9 to MicroElements.Swashbuckle.FluentValidation.AspNetCore

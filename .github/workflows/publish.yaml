@@ -1,0 +1,103 @@
+name: Publish
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.ref || github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+permissions: write-all
+defaults:
+  run:
+    shell: bash
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Are you sure you want to publish packages to nuget.org?"
+        required: true
+        default: "no"
+        type: choice
+        options:
+          - "no"
+          - "yes"
+  push:
+    branches:
+      - release/v*
+env:
+  DOCKER_BUILDKIT: 1
+  DOTNET_SYSTEM_CONSOLE_ALLOW_ANSI_COLOR_REDIRECTION: "true"
+  DOTNET_CLI_UI_LANGUAGE: en-US
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: 1
+  DOTNET_SVCUTIL_TELEMETRY_OPTOUT: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_ROLL_FORWARD: Major
+  DOTNET_ROLL_FORWARD_TO_PRERELEASE: 1
+  DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "false"
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+  POWERSHELL_UPDATECHECK_OPTOUT: 1
+  NUGET_CERT_REVOCATION_MODE: offline
+  MSBUILDDISABLENODEREUSE: 1
+jobs:
+  publish:
+    name: Publish
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    steps:
+      - name: git checkout / on non-'workflow_call'
+        uses: https://github.com/actions/checkout@v4
+        with:
+          clean: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          lfs: true
+          fetch-depth: 0
+
+      - name: Forward env variables & checkout fixes
+        id: gh
+        run: |
+          echo -n "" > .env
+          env | grep -E '^(GITHUB_|GITEA_|CI)' | grep -E GITHUB_SHA= --invert-match | grep -E GITHUB_REF= --invert-match >> $GITHUB_ENV
+          env | grep -E '^(GITHUB_|GITEA_|CI)' | grep -E GITHUB_SHA= --invert-match | grep -E GITHUB_REF= --invert-match >> .env
+          sha=$(git rev-parse HEAD)
+          echo "GITHUB_SHA=$sha" >> $GITHUB_ENV
+          echo "GITHUB_SHA=$sha" >> .env
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          echo "GITHUB_REF=refs/heads/$branch" >> $GITHUB_ENV
+          echo "GITHUB_REF=refs/heads/$branch" >> .env
+          echo -e "\033[38;5;99;5;16msha: $sha\033[0m"
+          echo -e "\033[38;5;99;5;16mbranch: $branch\033[0m"
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+
+      - name: Generate version
+        id: nbgv
+        uses: https://github.com/actions/github-script@v7
+        with:
+          # https://github.com/actions/toolkit/tree/main/packages/exec#basic
+          script: |-
+            const path = require('path');
+            const os = require('os');
+            process.env.GITHUB_REF='refs/heads/${{ steps.gh.outputs.branch }}';
+            process.env.GITHUB_SHA='${{ steps.gh.outputs.sha }}';
+            try {
+              // collect a JSON string of all the version properties.
+              let versionJson = '';
+              await exec.exec('nbgv', ['get-version', '-f', 'json', '--project', '.'], { listeners: { stdout: (data) => { versionJson += data.toString() } } });
+              core.setOutput('versionJson', versionJson);
+
+              // break up the JSON into individual outputs.
+              const versionProperties = JSON.parse(versionJson);
+              for (const name in versionProperties.CloudBuildAllVars) {
+                // Trim off the leading NBGV_
+                const outputName = name.substring(5);
+                core.setOutput(outputName, versionProperties.CloudBuildAllVars[name]);
+                core.exportVariable(outputName, versionProperties.CloudBuildAllVars[name]);
+              }
+              await exec.exec('nbgv', ['cloud', '--ci-system', 'GitHubActions', '--all-vars', '--project', '.']);
+            }
+            catch (error) {
+              core.setFailed(error.message);
+            }
+
+      - name: build-and-publish
+        run: |-
+          dotnet restore --runtime linux-x64 -p:Configuration=Release -t:GenerateAssemblyNBGVVersionInfo
+          dotnet test
+          dotnet nuget push artifacts/nupkg/*.nupkg --api-key ${{ secrets.NUGET_TOKEN }} --source https://api.nuget.org/v3/index.json --force-english-output --timeout 20 --skip-duplicate
