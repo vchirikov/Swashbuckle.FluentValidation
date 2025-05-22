@@ -1,6 +1,6 @@
 <Project ToolsVersion="latest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net9.0;net8.0</TargetFrameworks>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -89,7 +89,7 @@
 
   <PropertyGroup Condition=" '$(IsPackable)' == 'true' AND '$(DeterministicSourcePaths)' == 'true' ">
     <IncludeSymbols>true</IncludeSymbols>
-    <PackageIconUrl>$(RepositoryUrl)/media/branch/master/icon.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/vchirikov/Swashbuckle.FluentValidation/master/icon.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(IsPackable)' == 'true' AND '$(DeterministicSourcePaths)' == 'true' ">
