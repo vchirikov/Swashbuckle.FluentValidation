@@ -4,8 +4,6 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
-    <!-- do not use ArtifactsPivots, for multi-platform use `artifacts-path` cli arg  -->
-    <OutputPath>$(ArtifactsPath)\bin\$(MSBuildProjectName)\</OutputPath>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <!-- Include the PDB and xmldoc in the built .nupkg -->
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb;.xml</AllowedOutputExtensionsInPackageBuildOutputFolder>

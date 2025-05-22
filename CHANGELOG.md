@@ -1,5 +1,6 @@
 # Changes in 7.1.x
 - Update `FluentValidation` to 12.x
+- Added net8.0 support
 
 # Changes in 7.0.x
 - Update libraries to the latest version.

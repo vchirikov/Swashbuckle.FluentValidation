@@ -2,8 +2,6 @@
 <Project ToolsVersion="latest" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
   <PropertyGroup>
-    <!-- we don't use ArtifactsPivots and Configuration in the path  -->
-    <OutputPath>$(ArtifactsPath)\tests\$(MSBuildProjectName)\</OutputPath>
     <!-- after upgrade to xunit v3, where tests are executable projects -->
     <!-- <OutputType>Exe</OutputType> -->
     <!-- CA1034 - Do not nest type -->
