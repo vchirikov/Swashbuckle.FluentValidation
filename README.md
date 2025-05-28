@@ -1,5 +1,10 @@
 ﻿# Swashbuckle.FluentValidation
 
+[![License](https://img.shields.io/github/license/vchirikov/Swashbuckle.FluentValidation.svg)](https://raw.githubusercontent.com/vchirikov/Swashbuckle.FluentValidation/master/LICENSE)
+[![NuGetVersion](https://img.shields.io/nuget/v/Swashbuckle.FluentValidation.svg)](https://www.nuget.org/packages/Swashbuckle.FluentValidation)
+![NuGetDownloads](https://img.shields.io/nuget/dt/Swashbuckle.FluentValidation.svg)
+![Build](https://github.com/vchirikov/Swashbuckle.FluentValidation/workflows/Publish/badge.svg)
+
 Adds FluentValidation rules -> OpenApi schema.
 
 
