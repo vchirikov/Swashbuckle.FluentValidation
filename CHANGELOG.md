@@ -1,3 +1,6 @@
+# Changes in 7.2.x
+- Update `Swashbuckle` to 9.0.x
+
 # Changes in 7.1.x
 - Update `FluentValidation` to 12.x
 - Added net8.0 support
