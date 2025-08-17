@@ -21,6 +21,13 @@ public static class OpenApiExtensions
         {
             schemaProperty.Nullable = false;
         }
+    }
+    
+    /// <summary>
+    /// Sets Nullable to false if Minimum > 0 or Minimum >= 0 when ExclusiveMinimum is true.
+    /// </summary>
+    internal static void SetNotNullableIfMinimumGreaterThenZero(this OpenApiSchema schemaProperty)
+    {
         if (
             schemaProperty.Minimum.HasValue && (
             schemaProperty.ExclusiveMinimum.GetValueOrDefault(false) ? schemaProperty.Minimum >= 0 : schemaProperty.Minimum > 0)
@@ -50,7 +57,7 @@ public static class OpenApiExtensions
         }
     }
 
-    internal static void SetNewMin(this OpenApiSchema schemaProperty, Expression<Func<OpenApiSchema, int?>> prop, int? newValue, bool setNotNullableIfMinLengthGreaterThenZero = true)
+    internal static void SetNewMin(this OpenApiSchema schemaProperty, Expression<Func<OpenApiSchema, int?>> prop, int? newValue, bool setNotNullableIfMinLengthGreaterThenZero = true, bool setNotNullableIfMinimumGreaterThenZero = true)
     {
         if (newValue.HasValue)
         {
@@ -62,9 +69,11 @@ public static class OpenApiExtensions
         // SetNotNullableIfMinLengthGreaterThenZero should be optionated because FV allows nulls for MinLength validator
         if (setNotNullableIfMinLengthGreaterThenZero)
             schemaProperty.SetNotNullableIfMinLengthGreaterThenZero();
+        if (setNotNullableIfMinimumGreaterThenZero)
+            schemaProperty.SetNotNullableIfMinimumGreaterThenZero();
     }
 
-    internal static void SetNewMin(this OpenApiSchema schemaProperty, Expression<Func<OpenApiSchema, decimal?>> prop, decimal? newValue, bool setNotNullableIfMinLengthGreaterThenZero = true)
+    internal static void SetNewMin(this OpenApiSchema schemaProperty, Expression<Func<OpenApiSchema, decimal?>> prop, decimal? newValue, bool setNotNullableIfMinLengthGreaterThenZero = true, bool setNotNullableIfMinimumGreaterThenZero = true)
     {
         if (newValue.HasValue)
         {
@@ -76,6 +85,8 @@ public static class OpenApiExtensions
         // SetNotNullableIfMinLengthGreaterThenZero should be optionated because FV allows nulls for MinLength validator
         if (setNotNullableIfMinLengthGreaterThenZero)
             schemaProperty.SetNotNullableIfMinLengthGreaterThenZero();
+        if (setNotNullableIfMinimumGreaterThenZero)
+            schemaProperty.SetNotNullableIfMinimumGreaterThenZero();
     }
 
     private static int NewMaxValue(int? current, int newValue) => current.HasValue ? Math.Min(current.Value, newValue) : newValue;

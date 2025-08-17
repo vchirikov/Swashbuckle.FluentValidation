@@ -444,9 +444,9 @@ public partial class SchemaGenerationTests : UnitTestBase
     }
     
     [Fact]
-    public void GreaterThan_ShouldRespect_Set_NotNullable_GreaterThenZero()
+    public void GreaterThan_ShouldRespect_Set_NotNullable_MinimumGreaterThenZero()
     {
-        // without options. property is nullable, min length is set.
+        // without options. property is nullable, minimum is set.
         new SchemaBuilder<TestNumberEntity>()
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThan(0), schema => {
                 Assert.False(schema.Nullable);
@@ -471,38 +471,38 @@ public partial class SchemaGenerationTests : UnitTestBase
         
         // SetNotNullableIfMinLengthGreaterThenZero = false
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThan(0), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(1, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
             });
         // Nullable
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThan(0), schema => {
                 Assert.True(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
                 Assert.True(schema.Nullable);
                 Assert.Equal(1, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
                 Assert.True(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
@@ -510,38 +510,38 @@ public partial class SchemaGenerationTests : UnitTestBase
 
         // SetNotNullableIfMinLengthGreaterThenZero = true
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThan(0), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(1, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
             });
         //Nullable
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThan(0), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
                 Assert.False(schema.Nullable);
                 Assert.Equal(1, schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
                 Assert.True(schema.Nullable);
                 Assert.Equal(0, schema.Minimum);

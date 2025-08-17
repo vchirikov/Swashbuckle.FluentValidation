@@ -44,10 +44,10 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
             .WithApply(context =>
             {
                 if (context.Property.Type == "string")
-                    context.Property.SetNewMin(p => p.MinLength, 1, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                    context.Property.SetNewMin(p => p.MinLength, 1, _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
 
                 if (context.Property.Type == "array")
-                    context.Property.SetNewMin(p => p.MinItems, 1, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                    context.Property.SetNewMin(p => p.MinItems, 1, _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
             });
 
         yield return new FluentValidationRule("Length")
@@ -63,7 +63,7 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
                         schemaProperty.SetNewMax(p => p.MaxItems, lengthValidator.Max);
 
                     if (lengthValidator.Min > 0)
-                        schemaProperty.SetNewMin(p => p.MinItems, lengthValidator.Min, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                        schemaProperty.SetNewMin(p => p.MinItems, lengthValidator.Min, _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
                 }
                 else
                 {
@@ -71,7 +71,7 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
                         schemaProperty.SetNewMax(p => p.MaxLength, lengthValidator.Max);
 
                     if (lengthValidator.Min > 0)
-                        schemaProperty.SetNewMin(p => p.MinLength, lengthValidator.Min, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                        schemaProperty.SetNewMin(p => p.MinLength, lengthValidator.Min, _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
                 }
             });
 
@@ -133,12 +133,12 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
 
                     if (comparisonValidator.Comparison == Comparison.GreaterThanOrEqual)
                     {
-                        schemaProperty.SetNewMin(p => p.Minimum, valueToCompare, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                        schemaProperty.SetNewMin(p => p.Minimum, valueToCompare, _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
                     }
                     else if (comparisonValidator.Comparison == Comparison.GreaterThan)
                     {
                         schemaProperty.ExclusiveMinimum = true;
-                        schemaProperty.SetNewMin(p => p.Minimum, valueToCompare, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                        schemaProperty.SetNewMin(p => p.Minimum, valueToCompare, _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
                     }
                     else if (comparisonValidator.Comparison == Comparison.LessThanOrEqual)
                     {
@@ -163,7 +163,7 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
 
                 if (betweenValidator.From.IsNumeric())
                 {
-                    schemaProperty.SetNewMin(p => p.Minimum, betweenValidator.From.NumericToDecimal(), _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
+                    schemaProperty.SetNewMin(p => p.Minimum, betweenValidator.From.NumericToDecimal(), _options.Value.SetNotNullableIfMinLengthGreaterThenZero, _options.Value.SetNotNullableIfMinimumGreaterThenZero);
 
                     if (betweenValidator.Name == "ExclusiveBetweenValidator")
                     {
