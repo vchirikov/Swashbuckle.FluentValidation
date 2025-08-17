@@ -137,8 +137,8 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
                     }
                     else if (comparisonValidator.Comparison == Comparison.GreaterThan)
                     {
-                        schemaProperty.SetNewMin(p => p.Minimum, valueToCompare, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
                         schemaProperty.ExclusiveMinimum = true;
+                        schemaProperty.SetNewMin(p => p.Minimum, valueToCompare, _options.Value.SetNotNullableIfMinLengthGreaterThenZero);
                     }
                     else if (comparisonValidator.Comparison == Comparison.LessThanOrEqual)
                     {
@@ -146,8 +146,8 @@ public class DefaultFluentValidationRuleProvider : IFluentValidationRuleProvider
                     }
                     else if (comparisonValidator.Comparison == Comparison.LessThan)
                     {
-                        schemaProperty.SetNewMax(p => p.Maximum, valueToCompare);
                         schemaProperty.ExclusiveMaximum = true;
+                        schemaProperty.SetNewMax(p => p.Maximum, valueToCompare);
                     }
                 }
             });

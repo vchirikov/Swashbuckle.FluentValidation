@@ -21,6 +21,13 @@ public static class OpenApiExtensions
         {
             schemaProperty.Nullable = false;
         }
+        if (
+            schemaProperty.Minimum.HasValue && (
+            schemaProperty.ExclusiveMinimum.GetValueOrDefault(false) ? schemaProperty.Minimum >= 0 : schemaProperty.Minimum > 0)
+        )
+        {
+            schemaProperty.Nullable = false;
+        }
     }
 
     internal static void SetNewMax(this OpenApiSchema schemaProperty, Expression<Func<OpenApiSchema, int?>> prop, int? newValue)
