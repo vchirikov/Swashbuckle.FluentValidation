@@ -1,5 +1,6 @@
 # Changes in 7.2.x
 - Update `Swashbuckle` to 9.0.x
+- Add `SetNotNullableIfMinimumGreaterThenZero` generation option For more info see [#2](https://github.com/vchirikov/Swashbuckle.FluentValidation/pull/2) by @EliveltonRepolho
 
 # Changes in 7.1.x
 - Update `FluentValidation` to 12.x
