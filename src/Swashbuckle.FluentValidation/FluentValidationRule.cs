@@ -3,14 +3,14 @@
 
 using FluentValidation.Validators;
 using OpenApi.FluentValidation;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// FluentValidationRule.
 /// </summary>
-public class FluentValidationRule : IFluentValidationRule<OpenApiSchema>
+public class FluentValidationRule : IFluentValidationRule<IOpenApiSchema>
 {
     /// <summary>
     /// Gets rule name.
@@ -25,7 +25,7 @@ public class FluentValidationRule : IFluentValidationRule<OpenApiSchema>
     /// <summary>
     /// Gets action that modifies swagger schema.
     /// </summary>
-    public Action<IRuleContext<OpenApiSchema>>? Apply { get; }
+    public Action<IRuleContext<IOpenApiSchema>>? Apply { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FluentValidationRule"/> class.
@@ -36,10 +36,10 @@ public class FluentValidationRule : IFluentValidationRule<OpenApiSchema>
     public FluentValidationRule(
         string name,
         IReadOnlyCollection<Func<IPropertyValidator, bool>>? matches = null,
-        Action<IRuleContext<OpenApiSchema>>? apply = null)
+        Action<IRuleContext<IOpenApiSchema>>? apply = null)
     {
         Name = name;
-        Conditions = matches ?? Array.Empty<Func<IPropertyValidator, bool>>();
+        Conditions = matches ?? [];
         Apply = apply;
     }
 }
@@ -67,7 +67,7 @@ public static class FluentValidationRuleExtensions
     /// <param name="rule">Source rule.</param>
     /// <param name="applyAction">New apply action.</param>
     /// <returns>New rule instance.</returns>
-    public static FluentValidationRule WithApply(this FluentValidationRule rule, Action<IRuleContext<OpenApiSchema>> applyAction)
+    public static FluentValidationRule WithApply(this FluentValidationRule rule, Action<IRuleContext<IOpenApiSchema>> applyAction)
     {
         return new FluentValidationRule(rule.Name, rule.Conditions, applyAction);
     }

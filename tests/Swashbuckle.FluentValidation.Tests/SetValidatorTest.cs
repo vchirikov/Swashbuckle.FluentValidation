@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation.Tests;
@@ -46,11 +47,12 @@ public class SetValidatorTest : UnitTestBase
         // *********************************
 
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new RegisterUserRequestValidator()).GenerateSchema(typeof(RegisterUserRequest), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new RegisterUserRequestValidator())
+            .GenerateSchema(typeof(RegisterUserRequest), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var emailProperty = schema.Properties[nameof(RegisterUserRequest.Email)];
-        Assert.Equal("string", emailProperty.Type);
+        Assert.True(emailProperty.Type.Value.HasFlag(JsonSchemaType.String));
         Assert.Equal("email", emailProperty.Format);
         Assert.Equal(1, emailProperty.MinLength);
     }

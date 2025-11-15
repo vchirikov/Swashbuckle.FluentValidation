@@ -4,14 +4,14 @@
 using FluentValidation;
 using FluentValidation.Validators;
 using OpenApi.FluentValidation;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Swashbuckle.FluentValidation;
 
 /// <summary>
 /// RuleContext.
 /// </summary>
-public class OpenApiRuleContext : IRuleContext<OpenApiSchema>
+public class OpenApiRuleContext : IRuleContext<IOpenApiSchema>
 {
     /// <summary>
     /// Gets property name in schema.
@@ -26,22 +26,22 @@ public class OpenApiRuleContext : IRuleContext<OpenApiSchema>
     /// <summary>
     /// Gets OpenApi (swagger) schema.
     /// </summary>
-    public OpenApiSchema Schema { get; }
+    public IOpenApiSchema Schema { get; }
 
     /// <summary>
     /// Gets target property schema.
     /// </summary>
-    public OpenApiSchema Property
+    public IOpenApiSchema Property
     {
         get
         {
-            if (!Schema.Properties.ContainsKey(PropertyKey))
-            {
+            if (Schema.Properties == null ||
+                !Schema.Properties.TryGetValue(PropertyKey, out IOpenApiSchema? schemaProperty)) {
                 Type? schemaType = ValidationRuleInfo.GetReflectionContext()?.Type;
-                throw new ApplicationException($"Schema for type '{schemaType}' does not contain property '{PropertyKey}'.\nRegister {typeof(INameResolver)} if name in type differs from name in json.");
+                throw new ApplicationException(
+                    $"Schema for type '{schemaType}' does not contain property '{PropertyKey}'.\nRegister {typeof(INameResolver)} if name in type differs from name in json.");
             }
 
-            var schemaProperty = Schema.Properties[PropertyKey];
             return !ValidationRuleInfo.IsCollectionRule() ? schemaProperty : schemaProperty.Items;
         }
     }
@@ -59,10 +59,11 @@ public class OpenApiRuleContext : IRuleContext<OpenApiSchema>
     /// <param name="validationRuleInfo">ValidationRuleInfo.</param>
     /// <param name="propertyValidator">Property validator.</param>
     public OpenApiRuleContext(
-        OpenApiSchema schema,
+        IOpenApiSchema schema,
         string propertyKey,
         ValidationRuleContext validationRuleInfo,
-        IPropertyValidator propertyValidator)
+        IPropertyValidator propertyValidator
+    )
     {
         Schema = schema;
         PropertyKey = propertyKey;

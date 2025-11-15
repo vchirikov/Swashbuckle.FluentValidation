@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using OpenApi.FluentValidation;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.FluentValidation.AspNetCore;
@@ -26,7 +26,8 @@ public class SwaggerTestHost
 
     public SwaggerTestHost Configure(
         Action<SchemaGenerationOptions>? configureSchemaGenerationOptions = null,
-        Action<RegistrationOptions>? configureRegistration = null)
+        Action<RegistrationOptions>? configureRegistration = null
+    )
     {
         // Add FV
         Services.AddValidatorsFromAssemblyContaining(typeof(SwaggerTestHost));
@@ -57,11 +58,15 @@ public class SwaggerTestHost
         return this;
     }
 
-    public SwaggerTestHost GenerateSchema<TModel>(out OpenApiSchema schema)
+    public SwaggerTestHost GenerateSchema<TModel>(out IOpenApiSchema? schema)
     {
         var schemaGenerator = ServiceProvider.GetService<ISchemaGenerator>();
         var openApiSchema = schemaGenerator.GenerateSchema(typeof(TModel), SchemaRepository);
-        schema = SchemaRepository.Schemas[openApiSchema.Reference.Id];
+        if (!(openApiSchema is OpenApiSchemaReference { Reference.Id: not null } reference &&
+              SchemaRepository.Schemas.TryGetValue(reference.Reference.Id, out schema))) {
+            schema = null;
+        }
+
         return this;
     }
 }

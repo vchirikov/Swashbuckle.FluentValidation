@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: git checkout / on non-'workflow_call'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           clean: false
           ref: ${{ github.event.pull_request.head.sha }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Generate version
         id: nbgv
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           # https://github.com/actions/toolkit/tree/main/packages/exec#basic
           script: |-
@@ -97,11 +97,10 @@ jobs:
             }
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: |
-            9.x
-            8.x
+            10.x
 
       - name: build-and-publish
         run: |-

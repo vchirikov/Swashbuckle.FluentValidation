@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation;
@@ -22,19 +22,19 @@ public class FluentValidationDocumentFilter : IDocumentFilter
 
     private readonly IValidatorRegistry? _validatorRegistry;
 
-    private readonly IReadOnlyList<IFluentValidationRule<OpenApiSchema>> _rules;
+    private readonly IReadOnlyList<IFluentValidationRule<IOpenApiSchema>> _rules;
     private readonly SchemaGenerationOptions _schemaGenerationOptions;
 
     public FluentValidationDocumentFilter(
         /* System services */
         ILoggerFactory? loggerFactory = null,
         IServiceProvider? serviceProvider = null,
-
         /* MicroElements services */
         IValidatorRegistry? validatorRegistry = null,
         IEnumerable<FluentValidationRule>? rules = null,
         IOptions<SchemaGenerationOptions>? schemaGenerationOptions = null,
-        INameResolver? nameResolver = null)
+        INameResolver? nameResolver = null
+    )
     {
         // System services
         _logger = loggerFactory?.CreateLogger(typeof(FluentValidationRules)) ?? NullLogger.Instance;
@@ -45,7 +45,8 @@ public class FluentValidationDocumentFilter : IDocumentFilter
         _validatorRegistry = validatorRegistry;
 
         // MicroElements services
-        _rules = new DefaultFluentValidationRuleProvider(schemaGenerationOptions).GetRules().ToArray().OverrideRules(rules);
+        _rules = new DefaultFluentValidationRuleProvider(schemaGenerationOptions).GetRules().ToArray()
+            .OverrideRules(rules);
         _schemaGenerationOptions = schemaGenerationOptions?.Value ?? new SchemaGenerationOptions();
     }
 
@@ -53,7 +54,7 @@ public class FluentValidationDocumentFilter : IDocumentFilter
     {
         public Type ModelType { get; init; }
         public string SchemaName { get; init; }
-        public OpenApiSchema Schema { get; init; }
+        public IOpenApiSchema Schema { get; init; }
     }
 
     record ParameterItem
@@ -62,8 +63,8 @@ public class FluentValidationDocumentFilter : IDocumentFilter
         public ApiParameterDescription ParameterDescription { get; init; }
         public Type ModelType { get; init; }
         public string SchemaName { get; init; }
-        public OpenApiSchema Schema { get; init; }
-        public OpenApiSchema ParameterSchema { get; init; }
+        public IOpenApiSchema Schema { get; init; }
+        public IOpenApiSchema ParameterSchema { get; init; }
     }
 
     /// <inheritdoc />
@@ -71,7 +72,8 @@ public class FluentValidationDocumentFilter : IDocumentFilter
     {
         var schemaRepositorySchemas = context.SchemaRepository.Schemas;
         var schemaIdSelector = _schemaGenerationOptions.SchemaIdSelector;
-        var schemaProvider = new SwashbuckleSchemaProvider(context.SchemaRepository, context.SchemaGenerator, schemaIdSelector);
+        var schemaProvider =
+            new SwashbuckleSchemaProvider(context.SchemaRepository, context.SchemaGenerator, schemaIdSelector);
 
         var apiDescriptions = context.ApiDescriptions.ToArray();
 
@@ -98,22 +100,19 @@ public class FluentValidationDocumentFilter : IDocumentFilter
         var schemasForParameters = apiDescriptions
             .SelectMany(description => description.ParameterDescriptions)
             .Where(description => description.ModelMetadata.ContainerType != null)
-            .Select(description => new ParameterItem { ParameterDescription = description, ModelType = description.ModelMetadata.ContainerType })
+            .Select(description => new ParameterItem
+                { ParameterDescription = description, ModelType = description.ModelMetadata.ContainerType })
             .Select(item => item with { SchemaName = schemaIdSelector.Invoke(item.ModelType) })
             .Select(item => item with { Schema = schemaProvider.GetSchemaForType(item.ModelType) })
             .ToArray();
 
         IEnumerable<ParameterItem> GetParameters()
         {
-            foreach (var apiDescription in apiDescriptions)
-            {
-                foreach (var apiParameterDescription in apiDescription.ParameterDescriptions)
-                {
+            foreach (var apiDescription in apiDescriptions) {
+                foreach (var apiParameterDescription in apiDescription.ParameterDescriptions) {
                     var containerType = apiParameterDescription.ModelMetadata.ContainerType;
-                    if (containerType != null)
-                    {
-                        var parameterItem = new ParameterItem
-                        {
+                    if (containerType != null) {
+                        var parameterItem = new ParameterItem {
                             ApiDescription = apiDescription,
                             ParameterDescription = apiParameterDescription,
                             ModelType = containerType,
@@ -132,23 +131,25 @@ public class FluentValidationDocumentFilter : IDocumentFilter
 
         schemasForParameters = GetParameters().ToArray();
 
-        OpenApiSchema FindParam(ParameterItem item)
+        OpenApiSchema? FindParam(ParameterItem item)
         {
             //return many?
-            var path = swaggerDoc.Paths.FirstOrDefault(pair => pair.Key.TrimStart('/') == item.ApiDescription.RelativePath);
-            var openApiParameter = path.Value.Operations.Values.FirstOrDefault().Parameters.FirstOrDefault(parameter => parameter.Name == item.ParameterDescription.Name);
-            return openApiParameter?.Schema;
+            var path = swaggerDoc.Paths.FirstOrDefault(pair =>
+                string.Equals(pair.Key.TrimStart('/'), item.ApiDescription.RelativePath, StringComparison.Ordinal));
+
+            var openApiParameter = path.Value.Operations?.Values.FirstOrDefault()?.Parameters
+                ?.FirstOrDefault(parameter =>
+                    string.Equals(parameter.Name, item.ParameterDescription.Name, StringComparison.Ordinal));
+
+            return openApiParameter?.Schema as OpenApiSchema;
         }
 
-        foreach (var item in schemasForTypes)
-        {
+        foreach (var item in schemasForTypes) {
             IValidator? validator = null;
-            try
-            {
+            try {
                 validator = _validatorRegistry.GetValidator(item.ModelType);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 _logger.LogWarning(0, e, $"GetValidator for type '{item.ModelType}' fails.");
             }
 
@@ -168,38 +169,37 @@ public class FluentValidationDocumentFilter : IDocumentFilter
 
             ApplyRulesToSchema(schemaContext, validator);
 
-            try
-            {
+            try {
                 AddRulesFromIncludedValidators(schemaContext, validatorContext);
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                 //TODO: functional
                 _logger.LogWarning(0, e, $"Applying IncludeRules for type '{item.ModelType}' fails.");
             }
         }
 
-        foreach (var item in schemasForParameters)
-        {
+        foreach (var item in schemasForParameters) {
             var itemParameterDescription = item.ParameterDescription;
-            var schemaPropertyName = itemParameterDescription.ModelMetadata.BinderModelName ?? itemParameterDescription.Name;
-            var parameterSchema = item.ParameterSchema;
-            var schema = item.Schema;
-            if (schema.Properties.TryGetValue(schemaPropertyName.ToLowerCamelCase(), out var property)
-                || schema.Properties.TryGetValue(schemaPropertyName, out property))
-            {
-                // Copy from property schema to parameter schema.
-                parameterSchema.Description = property.Description;
-                parameterSchema.MinLength = property.MinLength;
-                parameterSchema.Nullable = property.Nullable;
-                parameterSchema.MaxLength = property.MaxLength;
-                parameterSchema.Pattern = property.Pattern;
-                parameterSchema.Minimum = property.Minimum;
-                parameterSchema.Maximum = property.Maximum;
-                parameterSchema.ExclusiveMaximum = property.ExclusiveMaximum;
-                parameterSchema.ExclusiveMinimum = property.ExclusiveMinimum;
-                parameterSchema.Enum = property.Enum;
-                parameterSchema.AllOf = property.AllOf;
+            var schemaPropertyName =
+                itemParameterDescription.ModelMetadata.BinderModelName ?? itemParameterDescription.Name;
+
+            if (item.ParameterSchema is OpenApiSchema parameterSchema && item.Schema is OpenApiSchema schema) {
+                if (schema.Properties != null &&
+                    (schema.Properties.TryGetValue(schemaPropertyName.ToLowerCamelCase()!, out var property)
+                     || schema.Properties.TryGetValue(schemaPropertyName, out property))) {
+                    // Copy from property schema to parameter schema.
+                    parameterSchema.Description = property.Description;
+                    parameterSchema.MinLength = property.MinLength;
+                    parameterSchema.Type = property.Type;
+                    parameterSchema.MaxLength = property.MaxLength;
+                    parameterSchema.Pattern = property.Pattern;
+                    parameterSchema.Minimum = property.Minimum;
+                    parameterSchema.Maximum = property.Maximum;
+                    parameterSchema.ExclusiveMaximum = property.ExclusiveMaximum;
+                    parameterSchema.ExclusiveMinimum = property.ExclusiveMinimum;
+                    parameterSchema.Enum = property.Enum;
+                    parameterSchema.AllOf = property.AllOf;
+                }
             }
         }
     }
@@ -215,7 +215,9 @@ public class FluentValidationDocumentFilter : IDocumentFilter
     }
 
     [Obsolete("Есть повтор")]
-    private void AddRulesFromIncludedValidators(SchemaGenerationContext schemaGenerationContext, ValidatorContext validatorContext)
+    private void AddRulesFromIncludedValidators(SchemaGenerationContext schemaGenerationContext,
+        ValidatorContext validatorContext
+    )
     {
         FluentValidationSchemaBuilder.AddRulesFromIncludedValidators(
             validatorContext: validatorContext,

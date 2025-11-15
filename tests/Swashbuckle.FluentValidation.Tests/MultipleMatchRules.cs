@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation.Tests;
@@ -36,6 +37,7 @@ public class MultipleMatchRules : UnitTestBase
         // *************************
 
         void ShouldBeSuccess(PhoneEntity entity) => new PhoneEntity.Validator().ValidateAndThrow(entity);
+
         void ShouldBeFailed(PhoneEntity entity)
         {
             var validationResult = new PhoneEntity.Validator().Validate(entity);
@@ -57,6 +59,6 @@ public class MultipleMatchRules : UnitTestBase
 
         var schema = new SchemaRepository().GenerateSchemaForValidator(new PhoneEntity.Validator());
         var numberProp = schema.Properties[nameof(PhoneEntity.MobilePhoneNumber)];
-        Assert.Equal("string", numberProp.Type);
+        Assert.True(numberProp.Type != null && numberProp.Type.Value.HasFlag(JsonSchemaType.String));
     }
 }

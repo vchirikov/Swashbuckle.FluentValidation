@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation.Tests;
@@ -39,10 +40,14 @@ public class TreeValidatorTest : UnitTestBase
 
         // if we have gotten this far, huzza, no stack overflow.
 
-        // MicroElements schema validation should work normally on other non-recursive properties 
-        var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
+        // schema validation should work normally on other non-recursive properties
+        if (!(referenceSchema is OpenApiSchemaReference { Reference.Id: not null } reference &&
+              schemaRepository.Schemas.TryGetValue(reference.Reference.Id, out var schema))) {
+            schema = null;
+        }
+
         var idProperty = schema.Properties[nameof(Node.Id)];
-        Assert.Equal("string", idProperty.Type);
+        Assert.True(idProperty.Type.Value.HasFlag(JsonSchemaType.String));
         Assert.Equal(1, idProperty.MinLength);
     }
 }

@@ -4,7 +4,7 @@
 using Swashbuckle.FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation;
@@ -43,7 +43,7 @@ public class FluentValidationRulesScopeAdapter : ISchemaFilter, IDisposable
     }
 
     /// <inheritdoc />
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
         _fluentValidationRules.Apply(schema, context);
     }

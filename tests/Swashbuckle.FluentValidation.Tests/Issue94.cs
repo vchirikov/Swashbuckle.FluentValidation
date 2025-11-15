@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation.Tests;
@@ -63,13 +64,13 @@ public class Issue94 : UnitTestBase
     public void all_rules_should_be_applied()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new Person.PersonValidator())
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new Person.PersonValidator())
             .GenerateSchema(typeof(Person), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
-        Assert.Equivalent(new string[] { "Name", "Emails" }, schema.Properties.Keys);
+        Assert.Equivalent(new[] { "Name", "Emails" }, schema.Properties.Keys);
         var nameProperty = schema.Properties[nameof(Person.Name)];
-        Assert.Equal("string", nameProperty.Type);
+        Assert.True(nameProperty.Type.Value.HasFlag(JsonSchemaType.String));
         Assert.Equal(101, nameProperty.MaxLength);
     }
 }

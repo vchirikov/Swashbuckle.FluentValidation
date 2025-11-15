@@ -38,8 +38,8 @@ public static class SchemaGenerationOptionsExtensions
     /// <returns>The same options instance.</returns>
     public static SchemaGenerationOptions SetFrom(this SchemaGenerationOptions options, ISchemaGenerationOptions other)
     {
-        options.SetNotNullableIfMinLengthGreaterThenZero = other.SetNotNullableIfMinLengthGreaterThenZero;
-        options.SetNotNullableIfMinimumGreaterThenZero = other.SetNotNullableIfMinimumGreaterThenZero;
+        options.SetNotNullableIfMinLengthGreaterThanZero = other.SetNotNullableIfMinLengthGreaterThanZero;
+        options.SetNotNullableIfMinimumGreaterThanZero = other.SetNotNullableIfMinimumGreaterThanZero;
         options.UseAllOfForMultipleRules = other.UseAllOfForMultipleRules;
         options.ValidatorSearch = other.ValidatorSearch;
         options.NameResolver = other.NameResolver;

@@ -6,7 +6,7 @@ using OpenApi.FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation;
@@ -21,7 +21,7 @@ public class FluentValidationOperationFilter : IOperationFilter
 
     private readonly IValidatorRegistry? _validatorRegistry;
 
-    private readonly IReadOnlyList<IFluentValidationRule<OpenApiSchema>> _rules;
+    private readonly IReadOnlyList<IFluentValidationRule<IOpenApiSchema>> _rules;
     private readonly SchemaGenerationOptions _schemaGenerationOptions;
 
     /// <summary>
@@ -37,18 +37,21 @@ public class FluentValidationOperationFilter : IOperationFilter
         /* System services */
         ILoggerFactory? loggerFactory = null,
         IServiceProvider? serviceProvider = null,
-
         /* MicroElements services */
         IValidatorRegistry? validatorRegistry = null,
-        IFluentValidationRuleProvider<OpenApiSchema>? fluentValidationRuleProvider = null,
+        IFluentValidationRuleProvider<IOpenApiSchema>? fluentValidationRuleProvider = null,
         IEnumerable<FluentValidationRule>? rules = null,
-        IOptions<SchemaGenerationOptions>? schemaGenerationOptions = null)
+        IOptions<SchemaGenerationOptions>? schemaGenerationOptions = null
+    )
     {
         // System services
         _logger = loggerFactory?.CreateLogger(typeof(FluentValidationRules)) ?? NullLogger.Instance;
 
         // FluentValidation services
-        _validatorRegistry = validatorRegistry ?? new ServiceProviderValidatorRegistry(serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider)));
+        _validatorRegistry = validatorRegistry ??
+                             new ServiceProviderValidatorRegistry(serviceProvider ??
+                                                                  throw new ArgumentNullException(
+                                                                      nameof(serviceProvider)));
 
         // MicroElements services
         fluentValidationRuleProvider ??= new DefaultFluentValidationRuleProvider(schemaGenerationOptions);
@@ -61,12 +64,10 @@ public class FluentValidationOperationFilter : IOperationFilter
     /// <inheritdoc />
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        try
-        {
+        try {
             ApplyInternal(operation, context);
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             var operationId = operation.OperationId ?? context.ApiDescription.RelativePath;
             _logger.LogWarning(0, e, $"Error on apply rules for operation '{operationId}'.");
         }
@@ -77,22 +78,20 @@ public class FluentValidationOperationFilter : IOperationFilter
         if (operation.Parameters == null)
             return;
 
-        if (_validatorRegistry == null)
-        {
+        if (_validatorRegistry == null) {
             _logger.LogWarning(0, "ValidatorFactory is not provided. Please register FluentValidation.");
             return;
         }
 
-        var schemaProvider = new SwashbuckleSchemaProvider(context.SchemaRepository, context.SchemaGenerator, _schemaGenerationOptions.SchemaIdSelector);
+        var schemaProvider = new SwashbuckleSchemaProvider(context.SchemaRepository, context.SchemaGenerator,
+            _schemaGenerationOptions.SchemaIdSelector);
 
-        foreach (var operationParameter in operation.Parameters)
-        {
+        foreach (var operationParameter in operation.Parameters.OfType<OpenApiParameter>()) {
             var apiParameterDescription = context.ApiDescription.ParameterDescriptions.FirstOrDefault(description =>
-                description.Name.Equals(operationParameter.Name, StringComparison.InvariantCultureIgnoreCase));
+                description.Name.Equals(operationParameter.Name, StringComparison.OrdinalIgnoreCase));
 
             var modelMetadata = apiParameterDescription?.ModelMetadata;
-            if (modelMetadata != null)
-            {
+            if (modelMetadata != null) {
                 var parameterType = modelMetadata.ContainerType;
                 if (parameterType == null)
                     continue;
@@ -101,22 +100,19 @@ public class FluentValidationOperationFilter : IOperationFilter
                 if (validator == null)
                     continue;
 
-                OpenApiSchema schema = schemaProvider.GetSchemaForType(parameterType);
+                IOpenApiSchema schema = schemaProvider.GetSchemaForType(parameterType);
 
-                if (schema.Properties != null && schema.Properties.Count > 0)
-                {
+                if (schema.Properties != null && schema.Properties.Count > 0) {
                     var schemaPropertyName = operationParameter.Name;
 
-                    KeyValuePair<string, OpenApiSchema> apiProperty = schema.Properties.FirstOrDefault(property => property.Key.EqualsIgnoreAll(schemaPropertyName));
-                    if (apiProperty.Key != null)
-                    {
+                    KeyValuePair<string, IOpenApiSchema> apiProperty =
+                        schema.Properties.FirstOrDefault(property => property.Key.EqualsIgnoreAll(schemaPropertyName));
+                    if (apiProperty.Key != null) {
                         schemaPropertyName = apiProperty.Key;
                     }
-                    else
-                    {
+                    else {
                         var propertyInfo = parameterType.GetProperty(schemaPropertyName);
-                        if (propertyInfo != null && _schemaGenerationOptions.NameResolver != null)
-                        {
+                        if (propertyInfo != null && _schemaGenerationOptions.NameResolver != null) {
                             schemaPropertyName = _schemaGenerationOptions.NameResolver.GetPropertyName(propertyInfo);
                         }
                     }
@@ -132,24 +128,22 @@ public class FluentValidationOperationFilter : IOperationFilter
 
                     FluentValidationSchemaBuilder.ApplyRulesToSchema(
                         schemaType: parameterType,
-                        schemaPropertyNames: new[] { schemaPropertyName },
+                        schemaPropertyNames: [schemaPropertyName],
                         validator: validator,
                         logger: _logger,
                         schemaGenerationContext: schemaContext);
 
                     if (schema.Required != null)
-                        operationParameter.Required = schema.Required.Contains(schemaPropertyName, IgnoreAllStringComparer.Instance);
+                        operationParameter.Required =
+                            schema.Required.Contains(schemaPropertyName, IgnoreAllStringComparer.Instance);
 
-                    var parameterSchema = operationParameter.Schema;
-                    if (parameterSchema != null)
-                    {
+                    if (operationParameter.Schema is OpenApiSchema parameterSchema) {
                         if (schema.Properties.TryGetValue(schemaPropertyName.ToLowerCamelCase(), out var property)
-                            || schema.Properties.TryGetValue(schemaPropertyName, out property))
-                        {
+                            || schema.Properties.TryGetValue(schemaPropertyName, out property)) {
                             // Copy from property schema to parameter schema.
                             parameterSchema.Description = property.Description;
                             parameterSchema.MinLength = property.MinLength;
-                            parameterSchema.Nullable = property.Nullable;
+                            parameterSchema.Type = property.Type;
                             parameterSchema.MaxLength = property.MaxLength;
                             parameterSchema.Pattern = property.Pattern;
                             parameterSchema.Minimum = property.Minimum;

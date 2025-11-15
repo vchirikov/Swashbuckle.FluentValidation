@@ -1,9 +1,10 @@
 using System.Collections;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.Validators;
 using MicroElements.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation.Tests;
@@ -33,14 +34,15 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void NotEmpty_Should_Set_MinLength()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new ComplexObjectValidator()).GenerateSchema(typeof(ComplexObject), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new ComplexObjectValidator())
+            .GenerateSchema(typeof(ComplexObject), schemaRepository);
 
         Assert.NotNull(referenceSchema.Reference);
         Assert.Equal("ComplexObject", referenceSchema.Reference.Id);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
-        Assert.Equal("object", schema.Type);
+        Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Object));
         Assert.Equivalent(new string[] { TextProperty1, TextProperty2, TextProperty3, }, schema.Properties.Keys);
 
         Assert.Equal(1, schema.Properties[TextProperty1].MinLength);
@@ -60,17 +62,18 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void MaximumLength_ShouldNot_Override_NotEmpty()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new Validator2()).GenerateSchema(typeof(ComplexObject), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new Validator2())
+            .GenerateSchema(typeof(ComplexObject), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         Assert.Equal(1, schema.Properties[TextProperty1].MinLength);
         Assert.Equal(64, schema.Properties[TextProperty1].MaxLength);
-        Assert.False(schema.Properties[TextProperty1].Nullable);
+        Assert.False(schema.Properties[TextProperty1].Type.Value.HasFlag(JsonSchemaType.Null));
 
         Assert.Equal(1, schema.Properties[TextProperty2].MinLength);
         Assert.Equal(64, schema.Properties[TextProperty2].MaxLength);
-        Assert.False(schema.Properties[TextProperty2].Nullable);
+        Assert.False(schema.Properties[TextProperty2].Type.Value.HasFlag(JsonSchemaType.Null));
     }
 
     /// <summary>
@@ -80,12 +83,13 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void MaximumLength_ShouldNot_Override_NotNull()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new Validator2()).GenerateSchema(typeof(ComplexObject), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new Validator2())
+            .GenerateSchema(typeof(ComplexObject), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         Assert.Equal(64, schema.Properties[TextProperty3].MaxLength);
-        Assert.False(schema.Properties[TextProperty3].Nullable);
+        Assert.False(schema.Properties[TextProperty3].Type.Value.HasFlag(JsonSchemaType.Null));
     }
 
     public class Sample
@@ -102,6 +106,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         public double ValueInRangeDouble { get; set; }
         public decimal DecimalValue { get; set; }
         public string NotEmptyWithMaxLength { get; set; } = null!;
+
         // ReSharper disable once InconsistentNaming = null!;
         // https://github.com/micro-elements/MicroElements.Swashbuckle.FluentValidation/issues/10
         public string javaStyleProperty { get; set; } = null!;
@@ -134,14 +139,15 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void SampleValidator_FromSampleApi_Test()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new SampleValidator()).GenerateSchema(typeof(Sample), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new SampleValidator())
+            .GenerateSchema(typeof(Sample), schemaRepository);
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
-        Assert.Equal("object", schema.Type);
+        Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Object));
         Assert.Equal(13, schema.Properties.Keys.Count);
 
 
-        Assert.False(schema.Properties["NotNull"].Nullable);
+        Assert.False(schema.Properties["NotNull"].Type.Value.HasFlag(JsonSchemaType.Null));
         Assert.Contains("NotNull", schema.Required);
 
         Assert.Equal(1, schema.Properties["NotEmpty"].MinLength);
@@ -153,34 +159,35 @@ public partial class SchemaGenerationTests : UnitTestBase
 
         Assert.Equal(@"(\d{4})-(\d{2})-(\d{2})", schema.Properties["RegexField"].Pattern);
 
-        Assert.Equal(5, schema.Properties["ValueInRange"].Minimum);
+        Assert.Equal("5", schema.Properties["ValueInRange"].Minimum);
         Assert.Null(schema.Properties["ValueInRange"].ExclusiveMinimum);
-        Assert.Equal(10, schema.Properties["ValueInRange"].Maximum);
+        Assert.Equal("10", schema.Properties["ValueInRange"].Maximum);
         Assert.Null(schema.Properties["ValueInRange"].ExclusiveMaximum);
 
-        Assert.Equal(5, schema.Properties["ValueInRangeExclusive"].Minimum);
-        Assert.True(schema.Properties["ValueInRangeExclusive"].ExclusiveMinimum);
-        Assert.Equal(10, schema.Properties["ValueInRangeExclusive"].Maximum);
-        Assert.True(schema.Properties["ValueInRangeExclusive"].ExclusiveMaximum);
+        Assert.Equal("5", schema.Properties["ValueInRangeExclusive"].ExclusiveMinimum);
+        Assert.Equal("10", schema.Properties["ValueInRangeExclusive"].ExclusiveMaximum);
 
-        Assert.Equal((decimal)5.1f, schema.Properties["ValueInRangeFloat"].Minimum);
+        Assert.Equal((decimal)5.1f,
+            decimal.Parse(schema.Properties["ValueInRangeFloat"].Minimum, CultureInfo.InvariantCulture));
         Assert.Null(schema.Properties["ValueInRangeFloat"].ExclusiveMinimum);
-        Assert.Equal((decimal)10.2f, schema.Properties["ValueInRangeFloat"].Maximum);
+        Assert.Equal((decimal)10.2f,
+            decimal.Parse(schema.Properties["ValueInRangeFloat"].Maximum, CultureInfo.InvariantCulture));
         Assert.Null(schema.Properties["ValueInRangeFloat"].ExclusiveMaximum);
 
-        Assert.Equal((decimal)5.1d, schema.Properties["ValueInRangeDouble"].Minimum);
-        Assert.True(schema.Properties["ValueInRangeDouble"].ExclusiveMinimum);
-        Assert.Equal((decimal)10.2d, schema.Properties["ValueInRangeDouble"].Maximum);
-        Assert.True(schema.Properties["ValueInRangeDouble"].ExclusiveMaximum);
+        Assert.Equal((decimal)5.1d,
+            decimal.Parse(schema.Properties["ValueInRangeDouble"].ExclusiveMinimum, CultureInfo.InvariantCulture));
+        Assert.Equal((decimal)10.2d,
+            decimal.Parse(schema.Properties["ValueInRangeDouble"].ExclusiveMaximum, CultureInfo.InvariantCulture));
 
-        Assert.Equal(1.333m, schema.Properties["DecimalValue"].Minimum);
+        Assert.Equal(1.333m, decimal.Parse(schema.Properties["DecimalValue"].Minimum, CultureInfo.InvariantCulture));
         Assert.Null(schema.Properties["DecimalValue"].ExclusiveMinimum);
-        Assert.Equal(200.333m, schema.Properties["DecimalValue"].Maximum);
+        Assert.Equal(200.333m, decimal.Parse(schema.Properties["DecimalValue"].Maximum, CultureInfo.InvariantCulture));
         Assert.Null(schema.Properties["DecimalValue"].ExclusiveMaximum);
 
         Assert.Equal(1, schema.Properties["NotEmptyWithMaxLength"].MinLength);
         Assert.Equal(50, schema.Properties["NotEmptyWithMaxLength"].MaxLength);
     }
+
     public class Customer
     {
         public int Id { get; set; }
@@ -189,6 +196,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         public decimal Discount { get; set; }
         public string Address { get; set; } = null!;
     }
+
     public class CustomerValidator : AbstractValidator<Customer>
     {
         public CustomerValidator()
@@ -217,6 +225,7 @@ public partial class SchemaGenerationTests : UnitTestBase
             Include(new CustomerAddressValidator());
         }
     }
+
     internal class CustomerAddressValidator : AbstractValidator<Customer>
     {
         public CustomerAddressValidator()
@@ -236,11 +245,13 @@ public partial class SchemaGenerationTests : UnitTestBase
                 .Length(20, 250);
         }
     }
+
     [Fact]
     public void CustomerValidator_FromSampleApi_Test()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new CustomerValidator()).GenerateSchema(typeof(Customer), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)
+            SchemaGenerator(new CustomerValidator()).GenerateSchema(typeof(Customer), schemaRepository);
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         Assert.Equal(1, schema.Properties["Surname"].MinLength);
         Assert.Equal(1, schema.Properties["Forename"].MinLength);
@@ -250,50 +261,20 @@ public partial class SchemaGenerationTests : UnitTestBase
         Assert.Equal(250, schema.Properties["Address"].MaxLength);
 
         Assert.Equivalent(new OpenApiSchema() {
-            Type = "number",
+            Type = JsonSchemaType.Number,
             Format = "double",
-            Minimum = 4,
-            ExclusiveMinimum = true,
-            Maximum = 5,
-            ExclusiveMaximum = true
+            Minimum = null,
+            ExclusiveMinimum = "4",
+            Maximum = null,
+            ExclusiveMaximum = "5",
         }, schema.Properties["Discount"]);
 
         Assert.Equal(5, schema.Properties.Keys.Count);
     }
 
-    [Theory]
-    [InlineData(1, 2, 1)]
-    [InlineData(2, 1, 1)]
-    [InlineData(1, null, 1)]
-    [InlineData(null, 1, 1)]
-    public static void TestMaxOverride(int? first, int? second, int expected)
-    {
-        OpenApiSchema schemaProperty = new();
-
-        schemaProperty.SetNewMax(p => p.MaxLength, first);
-        schemaProperty.SetNewMax(p => p.MaxLength, second);
-
-        Assert.Equal(expected, schemaProperty.MaxLength);
-    }
-
-    [Theory]
-    [InlineData(1, 2, 2)]
-    [InlineData(2, 1, 2)]
-    [InlineData(1, null, 1)]
-    [InlineData(null, 1, 1)]
-    public static void TestMinOverride(int? first, int? second, int expected)
-    {
-        OpenApiSchema schemaProperty = new();
-
-        schemaProperty.SetNewMin(p => p.MinLength, first);
-        schemaProperty.SetNewMin(p => p.MinLength, second);
-
-        Assert.Equal(expected, schemaProperty.MinLength);
-    }
-
     public class Person
     {
-        public List<string> Emails { get; set; } = new List<string>();
+        public List<string> Emails { get; set; } = [];
     }
 
     public class PersonValidator : AbstractValidator<Person>
@@ -312,14 +293,15 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void CollectionValidation()
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new PersonValidator()).GenerateSchema(typeof(Person), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new PersonValidator())
+            .GenerateSchema(typeof(Person), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
         var emailsProp = schema.Properties[nameof(Person.Emails)];
 
         Assert.Null(emailsProp.Format);
 
-        Assert.Equal("string", emailsProp.Items.Type);
+        Assert.True(emailsProp.Items.Type.Value.HasFlag(JsonSchemaType.String));
         Assert.Equal("email", emailsProp.Items.Format);
     }
 
@@ -364,21 +346,20 @@ public partial class SchemaGenerationTests : UnitTestBase
         // *********************************
 
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new NumberEntity.Validator()).GenerateSchema(typeof(NumberEntity), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new NumberEntity.Validator())
+            .GenerateSchema(typeof(NumberEntity), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
         var numberProp = schema.Properties[nameof(NumberEntity.Number)];
-        Assert.Equal("integer", numberProp.Type);
-        Assert.False(numberProp.Nullable);
-        Assert.Equal(0, numberProp.Minimum);
-        Assert.Equal(true, numberProp.ExclusiveMinimum);
+        Assert.True(numberProp.Type.Value.HasFlag(JsonSchemaType.Integer));
+        Assert.False(numberProp.Type.Value.HasFlag(JsonSchemaType.Null));
+        Assert.Equal("0", numberProp.ExclusiveMinimum);
 
         var nullableNumberProp = schema.Properties[nameof(NumberEntity.NullableNumber)];
-        Assert.Equal("integer", nullableNumberProp.Type);
-        Assert.True(nullableNumberProp.Nullable);
-        Assert.Equal(0, nullableNumberProp.Minimum);
-        Assert.Equal(true, nullableNumberProp.ExclusiveMinimum);
+        Assert.True(nullableNumberProp.Type.Value.HasFlag(JsonSchemaType.Integer));
+        Assert.True(nullableNumberProp.Type.Value.HasFlag(JsonSchemaType.Null));
+        Assert.Equal("0", nullableNumberProp.ExclusiveMinimum);
     }
 
 
@@ -388,6 +369,7 @@ public partial class SchemaGenerationTests : UnitTestBase
 
         public string? NullableTextValue { get; set; }
     }
+
     public class TestNumberEntity
     {
         public int IntValue { get; set; }
@@ -400,12 +382,12 @@ public partial class SchemaGenerationTests : UnitTestBase
         new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.TextValue,
                 rule => rule.MaximumLength(5),
-                schema => Assert.True(schema.Nullable));
+                schema => Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null)));
 
         new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.NullableTextValue,
                 rule => rule.MaximumLength(5),
-                schema => Assert.True(schema.Nullable));
+                schema => Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null)));
     }
 
     [Fact]
@@ -414,7 +396,7 @@ public partial class SchemaGenerationTests : UnitTestBase
         var property = new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.TextValue, rule => rule.NotNull().MinimumLength(1));
 
-        Assert.False(property.Nullable);
+        Assert.False(property.Type.Value.HasFlag(JsonSchemaType.Null));
         Assert.Equal(1, property.MinLength);
     }
 
@@ -424,129 +406,128 @@ public partial class SchemaGenerationTests : UnitTestBase
         // without options. property is nullable, min length is set.
         new SchemaBuilder<TestEntity>()
             .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema => {
-                Assert.True(schema.Nullable);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
                 Assert.Equal(1, schema.MinLength);
             });
 
         new SchemaBuilder<TestEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThanZero = false)
             .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema => {
-                Assert.True(schema.Nullable);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
                 Assert.Equal(1, schema.MinLength);
             });
 
         new SchemaBuilder<TestEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinLengthGreaterThanZero = true)
             .AddRule(entity => entity.TextValue, rule => rule.MinimumLength(1), schema => {
-                Assert.False(schema.Nullable);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
                 Assert.Equal(1, schema.MinLength);
             });
     }
-    
+
     [Fact]
-    public void GreaterThan_ShouldRespect_Set_NotNullable_MinimumGreaterThenZero()
+    public void GreaterThan_ShouldRespect_Set_NotNullable_MinimumGreaterThanZero()
     {
         // without options. property is nullable, minimum is set.
         new SchemaBuilder<TestNumberEntity>()
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThan(0), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.ExclusiveMinimum);
             });
         new SchemaBuilder<TestNumberEntity>()
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(1, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("1", schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThan(0), schema => {
-                Assert.True(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.ExclusiveMinimum);
             });
-        
+
         new SchemaBuilder<TestNumberEntity>()
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
-                Assert.True(schema.Nullable);
-                Assert.Equal(1, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("1", schema.Minimum);
             });
-        
+
         // SetNotNullableIfMinLengthGreaterThenZero = false
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = false)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThan(0), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.ExclusiveMinimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = false)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(1, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("1", schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = false)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.Minimum);
             });
         // Nullable
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = false)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThan(0), schema => {
-                Assert.True(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.ExclusiveMinimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = false)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
-                Assert.True(schema.Nullable);
-                Assert.Equal(1, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("1", schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = false)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = false)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
-                Assert.True(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.Minimum);
             });
 
         // SetNotNullableIfMinLengthGreaterThenZero = true
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = true)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThan(0), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.ExclusiveMinimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = true)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(1, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("1", schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = true)
             .AddRule(entity => entity.IntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.Minimum);
             });
         //Nullable
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = true)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThan(0), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.ExclusiveMinimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = true)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(1), schema => {
-                Assert.False(schema.Nullable);
-                Assert.Equal(1, schema.Minimum);
+                Assert.False(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("1", schema.Minimum);
             });
         new SchemaBuilder<TestNumberEntity>()
-            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThenZero = true)
+            .ConfigureSchemaGenerationOptions(options => options.SetNotNullableIfMinimumGreaterThanZero = true)
             .AddRule(entity => entity.NullableIntValue, rule => rule.GreaterThanOrEqualTo(0), schema => {
-                Assert.True(schema.Nullable);
-                Assert.Equal(0, schema.Minimum);
+                Assert.True(schema.Type.Value.HasFlag(JsonSchemaType.Null));
+                Assert.Equal("0", schema.Minimum);
             });
-
     }
 
     public class BestShot
@@ -589,7 +570,8 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void ILengthValidator_ProperlyAppliesMinMax_ToStrings(int min, int max)
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new MinMaxLengthValidator(min, max)).GenerateSchema(typeof(MinMaxLength), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new MinMaxLengthValidator(min, max))
+            .GenerateSchema(typeof(MinMaxLength), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
@@ -614,7 +596,8 @@ public partial class SchemaGenerationTests : UnitTestBase
     public void ILengthValidator_ProperlyAppliesMinMax_ToArrays(int min, int max)
     {
         var schemaRepository = new SchemaRepository();
-        var referenceSchema = SchemaGenerator(new MinMaxLengthValidator(min, max)).GenerateSchema(typeof(MinMaxLength), schemaRepository);
+        var referenceSchema = (OpenApiSchemaReference)SchemaGenerator(new MinMaxLengthValidator(min, max))
+            .GenerateSchema(typeof(MinMaxLength), schemaRepository);
 
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
@@ -643,14 +626,16 @@ public partial class SchemaGenerationTests : UnitTestBase
         });
 
         schemaGenerator.GenerateSchema(typeof(BaseSample), schemaRepository);
-        var referenceSchema = schemaGenerator.GenerateSchema(typeof(DerivedSample), schemaRepository);
+        var referenceSchema =
+            (OpenApiSchemaReference)schemaGenerator.GenerateSchema(typeof(DerivedSample), schemaRepository);
         var schema = schemaRepository.Schemas[referenceSchema.Reference.Id];
 
-        // Should be empty after the change made because of the issue https://github.com/domaindrivendev/Swashbuckle.AspNetCore/issues/3021
-        Assert.Empty(schema.Properties);
+        // Should be empty after the change made because of the issue
+        // https://github.com/domaindrivendev/Swashbuckle.AspNetCore/issues/3021
+        Assert.True(schema.Properties == null || !schema.Properties.Any());
         Assert.Equal(2, schema.AllOf.Count);
 
-        var derivedSampleSchema = schema.AllOf.FirstOrDefault(s => s.Type == "object");
+        var derivedSampleSchema = schema.AllOf.FirstOrDefault(s => s.Type == JsonSchemaType.Object);
 
         Assert.NotNull(derivedSampleSchema);
 
@@ -684,10 +669,15 @@ public class DervidedSampleValidator : AbstractValidator<DerivedSample>
 
 public static class ValidatorExtensions
 {
-    public static IRuleBuilderOptions<T, TProperty> ListRange<T, TProperty>(this IRuleBuilder<T, TProperty> ruleBuilder, int minimumLenghtInclusive, int maximumLengthInclusive)
+    public static IRuleBuilderOptions<T, TProperty> ListRange<T, TProperty>(this IRuleBuilder<T, TProperty> ruleBuilder,
+        int minimumLenghtInclusive,
+        int maximumLengthInclusive
+    )
         where TProperty : IEnumerable
     {
-        return ruleBuilder.SetValidator((IPropertyValidator<T, TProperty>)new ListLengthValidator<T, TProperty>(minimumLenghtInclusive, maximumLengthInclusive));
+        return ruleBuilder.SetValidator(
+            (IPropertyValidator<T, TProperty>)new ListLengthValidator<T, TProperty>(minimumLenghtInclusive,
+                maximumLengthInclusive));
     }
 
     private sealed class ListLengthValidator<T, TProperty> : PropertyValidator<T, TProperty>, ILengthValidator

@@ -7,7 +7,7 @@ using OpenApi.FluentValidation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation;
@@ -21,7 +21,7 @@ public class FluentValidationRules : ISchemaFilter
 
     private readonly IValidatorRegistry _validatorRegistry;
 
-    private readonly IReadOnlyList<IFluentValidationRule<OpenApiSchema>> _rules;
+    private readonly IReadOnlyList<IFluentValidationRule<IOpenApiSchema>> _rules;
     private readonly SchemaGenerationOptions _schemaGenerationOptions;
 
     /// <summary>
@@ -37,18 +37,19 @@ public class FluentValidationRules : ISchemaFilter
         /* System services */
         ILoggerFactory? loggerFactory = null,
         IServiceProvider? serviceProvider = null,
-
         /* MicroElements services */
         IValidatorRegistry? validatorRegistry = null,
-        IFluentValidationRuleProvider<OpenApiSchema>? fluentValidationRuleProvider = null,
+        IFluentValidationRuleProvider<IOpenApiSchema>? fluentValidationRuleProvider = null,
         IEnumerable<FluentValidationRule>? rules = null,
-        IOptions<SchemaGenerationOptions>? schemaGenerationOptions = null)
+        IOptions<SchemaGenerationOptions>? schemaGenerationOptions = null
+    )
     {
         // System services
         _logger = loggerFactory?.CreateLogger(typeof(FluentValidationRules)) ?? NullLogger.Instance;
 
         // FluentValidation services
-        _validatorRegistry = validatorRegistry ?? new ServiceProviderValidatorRegistry(serviceProvider, schemaGenerationOptions);
+        _validatorRegistry = validatorRegistry ??
+                             new ServiceProviderValidatorRegistry(serviceProvider, schemaGenerationOptions);
 
         // MicroElements services
         fluentValidationRuleProvider ??= new DefaultFluentValidationRuleProvider(schemaGenerationOptions);
@@ -59,7 +60,7 @@ public class FluentValidationRules : ISchemaFilter
     }
 
     /// <inheritdoc />
-    public void Apply(OpenApiSchema? schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema? schema, SchemaFilterContext context)
     {
         if (schema is null)
             return;
@@ -77,7 +78,7 @@ public class FluentValidationRules : ISchemaFilter
         if (validators == null)
             return;
 
-        var allSchemas = new List<OpenApiSchema>();
+        var allSchemas = new List<IOpenApiSchema>();
         ProcessAllSchemas(schema, allSchemas);
 
         foreach (var validator in validators) {
@@ -113,7 +114,9 @@ public class FluentValidationRules : ISchemaFilter
             schemaGenerationContext: schemaGenerationContext);
     }
 
-    private void AddRulesFromIncludedValidators(SchemaGenerationContext schemaGenerationContext, ValidatorContext validatorContext)
+    private void AddRulesFromIncludedValidators(SchemaGenerationContext schemaGenerationContext,
+        ValidatorContext validatorContext
+    )
     {
         FluentValidationSchemaBuilder.AddRulesFromIncludedValidators(
             validatorContext: validatorContext,
@@ -121,15 +124,15 @@ public class FluentValidationRules : ISchemaFilter
             schemaGenerationContext: schemaGenerationContext);
     }
 
-    private void ProcessAllSchemas(OpenApiSchema schema, List<OpenApiSchema> schemas)
+    private void ProcessAllSchemas(IOpenApiSchema schema, List<IOpenApiSchema> schemas)
     {
         schemas.Add(schema);
 
-        var collectionsOfSchemas = new IList<OpenApiSchema>[] { schema.AllOf, schema.OneOf, schema.AnyOf };
+        var collectionsOfSchemas = new[] { schema.AllOf, schema.OneOf, schema.AnyOf };
 
-        foreach (var collectionOfSchemas in collectionsOfSchemas) {
-            foreach (var embededSchema in collectionOfSchemas) {
-                if (!embededSchema.Properties.Any()) {
+        foreach (var collectionOfSchemas in collectionsOfSchemas.Where(x => x != null)) {
+            foreach (var embededSchema in collectionOfSchemas!) {
+                if (embededSchema?.Properties == null || !embededSchema.Properties.Any()) {
                     continue;
                 }
 

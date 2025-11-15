@@ -5,7 +5,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using OpenApi.FluentValidation;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.FluentValidation.AspNetCore;
@@ -18,7 +18,8 @@ public class UnitTestBase
     public SwaggerGenerator SwaggerGenerator(
         Action<SwaggerGeneratorOptions>? configureSwaggerGenerator = null,
         Action<SchemaGeneratorOptions>? configureGenerator = null,
-        Action<JsonSerializerOptions>? configureSerializer = null)
+        Action<JsonSerializerOptions>? configureSerializer = null
+    )
     {
         var swaggerGeneratorOptions = new SwaggerGeneratorOptions();
         configureSwaggerGenerator?.Invoke(swaggerGeneratorOptions);
@@ -39,7 +40,8 @@ public class UnitTestBase
 
     public SchemaGenerator SchemaGenerator(
         Action<SchemaGeneratorOptions>? configureGenerator = null,
-        Action<JsonSerializerOptions>? configureSerializer = null)
+        Action<JsonSerializerOptions>? configureSerializer = null
+    )
     {
         var generatorOptions = new SchemaGeneratorOptions();
         configureGenerator?.Invoke(generatorOptions);
@@ -91,23 +93,26 @@ public class SchemaBuilder<T>
     }
 
     public SchemaBuilder<T> ConfigureSchemaGenerationOptions(
-        Action<SchemaGenerationOptions> configureSchemaGenerationOptions)
+        Action<SchemaGenerationOptions> configureSchemaGenerationOptions
+    )
     {
         configureSchemaGenerationOptions(_schemaGenerationOptions);
 
         return this;
     }
 
-    public OpenApiSchema AddRule<TProperty>(
+    public IOpenApiSchema AddRule<TProperty>(
         Expression<Func<T, TProperty>> propertyExpression,
         Action<IRuleBuilderInitial<T, TProperty>>? configureRule = null,
-        Action<OpenApiSchema>? schemaCheck = null)
+        Action<IOpenApiSchema>? schemaCheck = null
+    )
     {
         IRuleBuilderInitial<T, TProperty> ruleBuilder = Validator.RuleFor(propertyExpression);
         configureRule?.Invoke(ruleBuilder);
 
         var expressionBody = propertyExpression.Body as MemberExpression;
-        var schema = SchemaRepository.GenerateSchemaForValidator(Validator, configureSchemaGenerationOptions: options => options.SetFrom(_schemaGenerationOptions));
+        var schema = SchemaRepository.GenerateSchemaForValidator(Validator,
+            configureSchemaGenerationOptions: options => options.SetFrom(_schemaGenerationOptions));
 
         PropertyInfo propertyInfo = expressionBody.Member as PropertyInfo;
         string propertyName = _schemaGenerationOptions.NameResolver.GetPropertyName(propertyInfo);
@@ -122,27 +127,29 @@ public class SchemaBuilder<T>
 
 public static class TestExtensions
 {
-    public static OpenApiSchema GenerateSchemaForValidator<T>(
+    public static IOpenApiSchema GenerateSchemaForValidator<T>(
         this SchemaRepository schemaRepository,
         IValidator<T> validator,
         SchemaGenerationOptions? schemaGenerationOptions = null,
         Action<SchemaGenerationOptions>? configureSchemaGenerationOptions = null,
-        Action<JsonSerializerOptions>? configureSerializer = null)
+        Action<JsonSerializerOptions>? configureSerializer = null
+    )
     {
         var services = new ServiceCollection();
         services.AddFluentValidationRulesToSwagger(configureSchemaGenerationOptions);
         var serviceProvider = services.BuildServiceProvider();
 
         SchemaGenerator schemaGenerator = CreateSchemaGenerator(
-            new[] { validator },
+            [validator],
             serviceProvider: serviceProvider,
             configureSerializer: configureSerializer);
 
-        OpenApiSchema schema = schemaGenerator
+        var schema = schemaGenerator
             .GenerateSchema(typeof(T), schemaRepository);
 
-        if (schema.Reference?.Id != null)
-            schema = schemaRepository.Schemas[schema.Reference.Id];
+        if (schema is OpenApiSchemaReference { Reference.Id: not null } reference &&
+            schemaRepository.Schemas.TryGetValue(reference.Reference.Id, out schema)) {
+        }
 
         return schema;
     }
@@ -150,7 +157,8 @@ public static class TestExtensions
     public static SchemaGenerator CreateSchemaGenerator(
         IValidator[] validators,
         IServiceProvider serviceProvider,
-        Action<JsonSerializerOptions>? configureSerializer = null)
+        Action<JsonSerializerOptions>? configureSerializer = null
+    )
     {
         return CreateSchemaGenerator(
             configureGenerator: options => {
@@ -172,7 +180,8 @@ public static class TestExtensions
 
     public static SchemaGenerator CreateSchemaGenerator(
         Action<SchemaGeneratorOptions>? configureGenerator = null,
-        Action<JsonSerializerOptions>? configureSerializer = null)
+        Action<JsonSerializerOptions>? configureSerializer = null
+    )
     {
         var generatorOptions = new SchemaGeneratorOptions();
         configureGenerator?.Invoke(generatorOptions);

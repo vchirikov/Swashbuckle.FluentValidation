@@ -3,7 +3,7 @@
 
 using FluentValidation.Validators;
 using OpenApi.FluentValidation;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation;
@@ -11,7 +11,7 @@ namespace Swashbuckle.FluentValidation;
 /// <summary>
 /// Schema generation context.
 /// </summary>
-public record SchemaGenerationContext : ISchemaGenerationContext<OpenApiSchema>
+public record SchemaGenerationContext : ISchemaGenerationContext<IOpenApiSchema>
 {
     /// <inheritdoc/>
     public Type SchemaType { get; }
@@ -20,16 +20,16 @@ public record SchemaGenerationContext : ISchemaGenerationContext<OpenApiSchema>
     IReadOnlyList<IFluentValidationRule> ISchemaGenerationContext.Rules => Rules;
 
     /// <inheritdoc/>
-    public IReadOnlyList<IFluentValidationRule<OpenApiSchema>> Rules { get; }
+    public IReadOnlyList<IFluentValidationRule<IOpenApiSchema>> Rules { get; }
 
     /// <inheritdoc/>
     public ISchemaGenerationOptions SchemaGenerationOptions { get; }
 
     /// <inheritdoc/>
-    public OpenApiSchema Schema { get; }
+    public IOpenApiSchema Schema { get; }
 
     /// <inheritdoc/>
-    public ISchemaProvider<OpenApiSchema> SchemaProvider { get; }
+    public ISchemaProvider<IOpenApiSchema> SchemaProvider { get; }
 
     /// <inheritdoc/>
     public IEnumerable<string> Properties => Schema.Properties?.Keys ?? Array.Empty<string>();
@@ -45,7 +45,7 @@ public record SchemaGenerationContext : ISchemaGenerationContext<OpenApiSchema>
     internal SchemaRepository SchemaRepository { get; }
 
     /// <inheritdoc />
-    public ISchemaGenerationContext<OpenApiSchema> With(OpenApiSchema schema)
+    public ISchemaGenerationContext<IOpenApiSchema> With(IOpenApiSchema schema)
     {
         return new SchemaGenerationContext(
             schemaRepository: SchemaRepository,
@@ -58,7 +58,7 @@ public record SchemaGenerationContext : ISchemaGenerationContext<OpenApiSchema>
     }
 
     /// <inheritdoc />
-    public IRuleContext<OpenApiSchema> Create(
+    public IRuleContext<IOpenApiSchema> Create(
         string schemaPropertyName,
         ValidationRuleContext validationRuleContext,
         IPropertyValidator propertyValidator)
@@ -73,12 +73,12 @@ public record SchemaGenerationContext : ISchemaGenerationContext<OpenApiSchema>
         SchemaRepository schemaRepository,
         ISchemaGenerator schemaGenerator,
 
-        OpenApiSchema schema,
+        IOpenApiSchema schema,
         Type schemaType,
 
-        IReadOnlyList<IFluentValidationRule<OpenApiSchema>> rules,
+        IReadOnlyList<IFluentValidationRule<IOpenApiSchema>> rules,
         ISchemaGenerationOptions schemaGenerationOptions,
-        ISchemaProvider<OpenApiSchema>? schemaProvider = null)
+        ISchemaProvider<IOpenApiSchema>? schemaProvider = null)
     {
         SchemaRepository = schemaRepository;
         SchemaGenerator = schemaGenerator;

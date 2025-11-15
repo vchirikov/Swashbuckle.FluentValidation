@@ -1,5 +1,10 @@
-# Changes in 7.3.x
-- 
+# Changes in 8.0.x
+- Migrate to net10.0
+- (!) Drop support net9.0/net8.0, due to Microsoft.AspNetCore.OpenApi changes
+- (!) Update Swashbuckle to 10.0.x
+- Update FluentValidation to 12.1
+- NOTE: openapi 3.1 uses different rules for schema e.g. for ExclusiveMinimum/ExclusiveMaximum props
+
 
 # Changes in 7.2.x
 - Update `Swashbuckle` to 9.0.x

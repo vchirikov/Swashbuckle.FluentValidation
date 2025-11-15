@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using OpenApi.FluentValidation;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Swashbuckle.FluentValidation;
@@ -10,7 +10,7 @@ namespace Swashbuckle.FluentValidation;
 /// <summary>
 /// SchemaProvider implementation for Swashbuckle.
 /// </summary>
-public class SwashbuckleSchemaProvider : ISchemaProvider<OpenApiSchema>
+public class SwashbuckleSchemaProvider : ISchemaProvider<IOpenApiSchema>
 {
     private readonly SchemaRepository _schemaRepository;
     private readonly ISchemaGenerator _schemaGenerator;
@@ -25,7 +25,8 @@ public class SwashbuckleSchemaProvider : ISchemaProvider<OpenApiSchema>
     public SwashbuckleSchemaProvider(
         SchemaRepository schemaRepository,
         ISchemaGenerator schemaGenerator,
-        Func<Type, string>? schemaIdSelector = null)
+        Func<Type, string>? schemaIdSelector = null
+    )
     {
         _schemaRepository = schemaRepository;
         _schemaGenerator = schemaGenerator;
@@ -33,19 +34,17 @@ public class SwashbuckleSchemaProvider : ISchemaProvider<OpenApiSchema>
     }
 
     /// <inheritdoc />
-    public OpenApiSchema GetSchemaForType(Type type)
+    public IOpenApiSchema GetSchemaForType(Type type)
     {
         var schemaId = _schemaIdSelector(type);
 
-        if (!_schemaRepository.Schemas.TryGetValue(schemaId, out OpenApiSchema schema))
-        {
+        if (!_schemaRepository.Schemas.TryGetValue(schemaId, out var schema)) {
             schema = _schemaGenerator.GenerateSchema(type, _schemaRepository);
         }
 
         if ((schema.Properties == null || schema.Properties.Count == 0) &&
-            _schemaRepository.Schemas.ContainsKey(schemaId))
-        {
-            schema = _schemaRepository.Schemas[schemaId];
+            _schemaRepository.Schemas.TryGetValue(schemaId, out IOpenApiSchema? value)) {
+            schema = value;
         }
 
         return schema;

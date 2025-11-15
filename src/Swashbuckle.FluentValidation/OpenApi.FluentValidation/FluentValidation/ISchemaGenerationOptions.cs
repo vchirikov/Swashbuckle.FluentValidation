@@ -15,12 +15,12 @@ public interface ISchemaGenerationOptions
     /// <summary>
     /// Gets a value indicating whether property should be set to not nullable if MinLength is greater than zero.
     /// </summary>
-    bool SetNotNullableIfMinLengthGreaterThenZero { get; }
-    
+    bool SetNotNullableIfMinLengthGreaterThanZero { get; }
+
     /// <summary>
     /// Gets or sets a value indicating whether property should be set to not nullable if Minimum is greater than zero.
     /// </summary>
-    bool SetNotNullableIfMinimumGreaterThenZero { get; }
+    bool SetNotNullableIfMinimumGreaterThanZero { get; }
 
     /// <summary>
     /// Gets a value indicating whether schema generator should use AllOf for multiple rules (for example for multiple patterns).
@@ -68,13 +68,13 @@ public class SchemaGenerationOptions : ISchemaGenerationOptions
     /// Gets or sets a value indicating whether property should be set to not nullable if MinLength is greater than zero.
     /// Default: false.
     /// </summary>
-    public bool SetNotNullableIfMinLengthGreaterThenZero { get; set; } = false;
-    
+    public bool SetNotNullableIfMinLengthGreaterThanZero { get; set; }
+
     /// <summary>
     /// Gets or sets a value indicating whether property should be set to not nullable if Minimum is greater than zero.
     /// Default: false.
     /// </summary>
-    public bool SetNotNullableIfMinimumGreaterThenZero { get; set; } = false;
+    public bool SetNotNullableIfMinimumGreaterThanZero { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether schema generator should use AllOf for multiple rules (for example for multiple patterns).
@@ -109,7 +109,7 @@ public class SchemaGenerationOptions : ISchemaGenerationOptions
     /// <returns>The same options.</returns>
     public SchemaGenerationOptions SetFluentValidationCompatibility()
     {
-        SetNotNullableIfMinLengthGreaterThenZero = false;
+        SetNotNullableIfMinLengthGreaterThanZero = false;
         ValidatorSearch = ValidatorSearch with { IsOneValidatorForType = true };
 
         return this;
@@ -124,7 +124,8 @@ public record ValidatorSearchSettings
     /// <summary>
     /// Gets default validator search settings.
     /// </summary>
-    public static ValidatorSearchSettings Default { get; } = new() { IsOneValidatorForType = true, SearchBaseTypeValidators = true };
+    public static ValidatorSearchSettings Default { get; } =
+        new() { IsOneValidatorForType = true, SearchBaseTypeValidators = true };
 
     /// <summary>
     /// Gets a value indicating whether the model type can have only one validator (default in FluentValidation).
